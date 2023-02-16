@@ -99,12 +99,14 @@ export default {
     const image1 = "http://localhost:8111/storage/lab-room/lab1.jpg";
     const image2 = "http://localhost:8111/storage/lab-room/lab5.jpg";
     const image3 = "http://localhost:8111/storage/lab-room/lab7.jpg";
+    const pdf1 = "http://localhost:8111/storage/excercise/lab.pdf";
 
     // const image = "http://localhost:8111/storage/organization/chart2.jpg";
     return {
       image1,
       image2,
       image3,
+      pdf1
     };
   },
 };
@@ -310,6 +312,8 @@ export default {
                     class="mt-2"
                     variant="outline-primary"
                     style="width: 100%"
+                    :href="pdf1"
+                    target="_blank"
                   >
                     <feather-icon icon="FileIcon" size="12" />
                     ใบงาน
@@ -355,6 +359,8 @@ export default {
                     class="mt-2"
                     variant="outline-primary"
                     style="width: 100%"
+                    :href="pdf1"
+                    target="_blank"
                   >
                     <feather-icon icon="FileIcon" size="12" />
                     ใบงาน
@@ -400,6 +406,8 @@ export default {
                     class="mt-2"
                     variant="outline-primary"
                     style="width: 100%"
+                    :href="pdf1"
+                    target="_blank"
                   >
                     <feather-icon icon="FileIcon" size="12" />
                     ใบงาน
@@ -445,6 +453,8 @@ export default {
                     class="mt-2"
                     variant="outline-primary"
                     style="width: 100%"
+                    :href="pdf1"
+                    target="_blank"
                   >
                     <feather-icon icon="FileIcon" size="12" />
                     ใบงาน

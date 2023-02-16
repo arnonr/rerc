@@ -138,16 +138,19 @@ export default {
         "
       />
       <div class="row">
-        <div class="col-md-6 mt-1 mb-2">
+
+        <div class="col-xl-6 mt-1 mb-2">
           <div class="row">
-            <div class="col-md-6 text-right">
+
+            <div class="col-xl-6 col-md-4">
               <b-img
                 :src="image1"
-                class="rounded"
-                style="width: 300px; height: 200px"
+                class="rounded img-fluid"
+               
               />
             </div>
-            <div class="col-md-6">
+            <!--  -->
+            <div class="col-xl-6 col-md-8">
               <h3>ห้องปฏิบัติการระบบขับเคลื่อนสมัยใหม่ (302)</h3>
               <div class="text-justify">
                 It is a long established fact that a reader will be distracted
@@ -168,19 +171,19 @@ export default {
                 ดูเพิ่มเติม
               </button>
             </div>
+
           </div>
         </div>
 
-        <div class="col-md-6 mt-1 mb-2">
+        <div class="col-xl-6 mt-1 mb-2">
           <div class="row">
-            <div class="col-md-6 text-right">
+            <div class="col-xl-6 col-md-4">
               <b-img
                 :src="image2"
-                class="rounded"
-                style="width: 300px; height: 200px"
+                class="rounded img-fluid"
               />
             </div>
-            <div class="col-md-6">
+            <div class="col-xl-6 col-md-8">
               <h3>ห้องเรียนบรรยายและปฏิบัติการ (303)</h3>
               <div class="text-justify">
                 It is a long established fact that a reader will be distracted
@@ -204,16 +207,15 @@ export default {
           </div>
         </div>
 
-        <div class="col-md-6 mt-1 mb-2">
+        <div class="col-xl-6 mt-1 mb-2">
           <div class="row">
-            <div class="col-md-6 text-right">
+            <div class="col-xl-6 text-right col-md-4">
               <b-img
                 :src="image3"
-                class="rounded"
-                style="width: 300px; height: 200px"
+                class="rounded img-fluid"
               />
             </div>
-            <div class="col-md-6">
+            <div class="col-xl-6 col-md-8">
               <h3>ห้องปฏิบัติการเซลล์เชื้อเพลิง (305)</h3>
               <div class="text-justify">
                 It is a long established fact that a reader will be distracted
@@ -237,16 +239,15 @@ export default {
           </div>
         </div>
 
-        <div class="col-md-6 mt-1 mb-2">
+        <div class="col-xl-6 mt-1 mb-2">
           <div class="row">
-            <div class="col-md-6 text-right">
+            <div class="col-xl-6 text-right col-md-4">
               <b-img
                 :src="image3"
-                class="rounded"
-                style="width: 300px; height: 200px"
+                class="rounded img-fluid"
               />
             </div>
-            <div class="col-md-6">
+            <div class="col-xl-6 col-md-8">
               <h3>ห้องปฏิบัติการไฟฟ้าเคมี (306)</h3>
               <div class="text-justify">
                 It is a long established fact that a reader will be distracted
@@ -270,16 +271,15 @@ export default {
           </div>
         </div>
 
-        <div class="col-md-6 mt-1 mb-2">
+        <div class="col-xl-6 mt-1 mb-2">
           <div class="row">
-            <div class="col-md-6 text-right">
+            <div class="col-xl-6 text-right col-md-4">
               <b-img
                 :src="image2"
-                class="rounded"
-                style="width: 300px; height: 200px"
+                class="rounded img-fluid"
               />
             </div>
-            <div class="col-md-6">
+            <div class="col-xl-6 col-md-8">
               <h3>ห้องปฏิบัติการไฟฟ้าเคมี (307)</h3>
               <div class="text-justify">
                 It is a long established fact that a reader will be distracted
@@ -303,16 +303,15 @@ export default {
           </div>
         </div>
 
-        <div class="col-md-6 mt-1 mb-2">
+        <div class="col-xl-6 mt-1 mb-2">
           <div class="row">
-            <div class="col-md-6 text-right">
+            <div class="col-xl-6 text-right col-md-4">
               <b-img
                 :src="image1"
-                class="rounded"
-                style="width: 300px; height: 200px"
+                class="rounded img-fluid"
               />
             </div>
-            <div class="col-md-6">
+            <div class="col-xl-6 col-md-8">
               <h3>ห้องปฏิบัติการขั้นพื้นฐาน (309)</h3>
               <div class="text-justify">
                 It is a long established fact that a reader will be distracted

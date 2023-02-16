@@ -13,6 +13,7 @@ import {
   BOverlay,
   BFormGroup,
   BCardText,
+  BImg,
 } from "bootstrap-vue";
 import vSelect from "vue-select";
 import flatPickr from "vue-flatpickr-component";
@@ -24,15 +25,13 @@ import "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
 dayjs.extend(buddhistEra);
 
-import { Splide, SplideSlide } from "@cycraft/vue-splide";
-import "@splidejs/splide/dist/css/themes/splide-default.min.css";
-
 import {
   ref,
   watch,
   watchEffect,
   reactive,
   onUnmounted,
+  onMounted,
 } from "@vue/composition-api";
 import store from "@/store";
 // import mouStoreModule from "./mouStoreModule";
@@ -40,6 +39,9 @@ import store from "@/store";
 import { useToast } from "vue-toastification/composition";
 import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
 import { getUserData } from "@/auth/utils";
+
+import { Splide, SplideSlide } from "@cycraft/vue-splide";
+import "@splidejs/splide/dist/css/themes/splide-default.min.css";
 
 export default {
   filters: {
@@ -67,6 +69,7 @@ export default {
     dayjs,
     Splide,
     SplideSlide,
+    BImg,
   },
   data() {
     return {
@@ -84,10 +87,13 @@ export default {
   setup() {
     // const MOU_APP_STORE_MODULE_NAME = "mou";
 
-    // // Register module
+    // // // Register module
     // if (!store.hasModule(MOU_APP_STORE_MODULE_NAME))
     //   store.registerModule(MOU_APP_STORE_MODULE_NAME, mouStoreModule);
 
+    onMounted(() => {
+      console.log("FREEDOM");
+    });
     // UnRegister on leave
     onUnmounted(() => {
       // if (store.hasModule(MOU_APP_STORE_MODULE_NAME))
@@ -365,22 +371,38 @@ export default {
     const image3 = "http://localhost:8111/storage/lab/image3.jpg";
     const slideOptions = {
       rewind: true,
-    //   autoplay: true,
+      // rewindSpeed: 1000,
+      // speed: 00,
+      // interval: 7000,
+      autoplay: true,
       type: "loop",
       perPage: 1,
       perMove: 1,
       autoWidth: true,
-      gap: "0rem",
+      gap: "1rem",
+      fixedWidth: "10rem",
       updateOnMove: true,
       focus: "center",
-      slideFocus: true,
-      drag: true,
+      trimSpace: false,
+      start: 1,
+      // slideFocus: true,
+      // drag: true,
     };
+
+    const splide = ref();
+
+    onMounted(() => {
+      if (splide.value && splide.value.splide) {
+        splide.value.go(0);
+      }
+    });
+
     return {
       image1,
       image2,
       image3,
       slideOptions,
+      splide,
     };
   },
 };
@@ -417,6 +439,14 @@ export default {
   vertical-align: middle; /* used for all slides vertical align center */
 }
 
+// .splide:not(.is-overflow) .splide__arrows {
+//   display: none;
+// }
+
+// .splide:not( .is-overflow ) .splide__list {
+//   justify-content: center;
+// }
+
 div.inner {
   margin-left: -6em;
 }
@@ -426,71 +456,80 @@ div.inner {
   -webkit-transition: transform 0.5s ease-in-out;
   -moz-transition: transform 0.5s ease-in-out;
   -ms-transition: transform 0.5s ease-in-out;
-//   padding-right:1em;
+  //   padding-right:1em;
 }
 </style>
 
 <template>
   <div class="container-lg">
     <!-- Search -->
-    <div class="div-slide">
-      <Splide :options="slideOptions" aria-label="Vue Splide Example">
-        <SplideSlide>
-          <div class="inner">
-            <img :src="image1" alt="Sample 1" />
 
-            <div class="text-center">
-              <button
-                style="margin-top: -2em; background-color: #fff"
-                class="btn btn-outline-primary"
-                @click="
-                  $router.push({
-                    name: 'lab-room'
-                  })
-                "
-              >
-                ดูเพิ่มเติม
-              </button>
-            </div>
-          </div>
-        </SplideSlide>
-        <SplideSlide>
-          <div class="inner">
-            <img :src="image2" alt="Sample 2" />
-            <div class="text-center">
-              <button
-                style="margin-top: -2em; background-color: #fff"
-                class="btn btn-outline-primary"
-                @click="
-                  $router.push({
-                    name: 'lab-room'
-                  })
-                "
-              >
-                ดูเพิ่มเติม
-              </button>
-            </div>
-          </div>
-        </SplideSlide>
-        <SplideSlide>
-          <div class="inner">
-            <img :src="image3" alt="Sample 2" />
-            <div class="text-center">
-              <button
-                style="margin-top: -2em; background-color: #fff !important"
-                class="btn btn-outline-primary"
-                @click="
-                  $router.push({
-                    name: 'lab-room'
-                  })
-                "
-              >
-                ดูเพิ่มเติม
-              </button>
-            </div>
-          </div>
-        </SplideSlide>
-      </Splide>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="div-slide">
+          <Splide
+            :options="slideOptions"
+            aria-label="Vue Splide Example"
+            ref="splide"
+          >
+            <SplideSlide>
+              <div class="inner">
+                <img :src="image1" alt="Sample 1" />
+
+                <div class="text-center">
+                  <button
+                    style="margin-top: -2em; background-color: #fff"
+                    class="btn btn-outline-primary"
+                    @click="
+                      $router.push({
+                        name: 'lab-room',
+                      })
+                    "
+                  >
+                    ดูเพิ่มเติม
+                  </button>
+                </div>
+              </div>
+            </SplideSlide>
+            <SplideSlide>
+              <div class="inner">
+                <img :src="image2" alt="Sample 2" />
+                <div class="text-center">
+                  <button
+                    style="margin-top: -2em; background-color: #fff"
+                    class="btn btn-outline-primary"
+                    @click="
+                      $router.push({
+                        name: 'lab-room',
+                      })
+                    "
+                  >
+                    ดูเพิ่มเติม
+                  </button>
+                </div>
+              </div>
+            </SplideSlide>
+            <SplideSlide>
+              <div class="inner">
+                <img :src="image3" alt="Sample 2" />
+                <div class="text-center">
+                  <button
+                    style="margin-top: -2em; background-color: #fff !important"
+                    class="btn btn-outline-primary"
+                    @click="
+                      $router.push({
+                        name: 'lab-room',
+                      })
+                    "
+                  >
+                    ดูเพิ่มเติม
+                  </button>
+                </div>
+              </div>
+            </SplideSlide>
+          </Splide>
+        </div>
+      </div>
     </div>
 
     <hr
