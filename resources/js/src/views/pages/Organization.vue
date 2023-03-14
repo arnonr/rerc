@@ -106,7 +106,15 @@ export default {
     const isModal = ref(false);
     const isSubmit = ref(false);
 
-    const image = "http://localhost:8111/storage/organization/chart1.jpg";
+    let baseUrl = "http://143.198.208.110:8111";
+    if (
+      location.hostname === "localhost" ||
+      location.hostname === "127.0.0.1"
+    ) {
+      baseUrl = "http://localhost:8111";
+    }
+
+    const image = baseUrl + "/storage/organization/chart1.jpg";
 
     // const image = "http://localhost:8111/storage/organization/chart2.jpg";
 

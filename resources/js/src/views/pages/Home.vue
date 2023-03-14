@@ -377,9 +377,17 @@ export default {
     // formatYear
     // };
 
-    const image1 = "http://localhost:8111/storage/lab/image1.jpg";
-    const image2 = "http://localhost:8111/storage/lab/image2.jpg";
-    const image3 = "http://localhost:8111/storage/lab/image3.jpg";
+    let baseUrl = "http://143.198.208.110:8111";
+    if (
+      location.hostname === "localhost" ||
+      location.hostname === "127.0.0.1"
+    ) {
+      baseUrl = "http://localhost:8111";
+    }
+
+    const image1 = baseUrl + "/storage/lab/image1.jpg";
+    const image2 = baseUrl + "/storage/lab/image2.jpg";
+    const image3 = baseUrl + "/storage/lab/image3.jpg";
     const slideOptions = {
       rewind: true,
       // rewindSpeed: 1000,

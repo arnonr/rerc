@@ -107,9 +107,17 @@ export default {
     const isModal = ref(false);
     const isSubmit = ref(false);
 
-    const image1 = "http://localhost:8111/storage/portfolio/port1.jpg";
-    const image2 = "http://localhost:8111/storage/portfolio/port2.jpg";
-    const image3 = "http://localhost:8111/storage/portfolio/port3.jpg";
+    let baseUrl = "http://143.198.208.110:8111";
+    if (
+      location.hostname === "localhost" ||
+      location.hostname === "127.0.0.1"
+    ) {
+      baseUrl = "http://localhost:8111";
+    }
+
+    const image1 = baseUrl + "/storage/portfolio/port1.jpg";
+    const image2 = baseUrl + "/storage/portfolio/port2.jpg";
+    const image3 = baseUrl + "/storage/portfolio/port3.jpg";
 
     const handleAddClick = () => {
       isModal.value = true;

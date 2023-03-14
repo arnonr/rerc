@@ -107,10 +107,18 @@ export default {
     const isModal = ref(false);
     const isSubmit = ref(false);
 
-    const image1 = "http://localhost:8111/storage/lab-room/lab1.jpg";
-    const image2 = "http://localhost:8111/storage/lab-room/lab5.jpg";
-    const image3 = "http://localhost:8111/storage/lab-room/lab7.jpg";
-    const pdf1 = "http://localhost:8111/storage/excercise/lab.pdf";
+    let baseUrl = "http://143.198.208.110:8111";
+    if (
+      location.hostname === "localhost" ||
+      location.hostname === "127.0.0.1"
+    ) {
+      baseUrl = "http://localhost:8111";
+    }
+
+    const image1 = baseUrl + "/storage/lab-room/lab1.jpg";
+    const image2 = baseUrl + "/storage/lab-room/lab5.jpg";
+    const image3 = baseUrl + "/storage/lab-room/lab7.jpg";
+    const pdf1 = baseUrl + "/storage/excercise/lab.pdf";
 
     // const image = "http://localhost:8111/storage/organization/chart2.jpg";
 
@@ -523,8 +531,8 @@ export default {
                 title="Card title that wraps to a new line"
                 class="position-static"
               >
-                             <!--  -->
-                             <span style="position: absolute; top: 8px; right: 18px">
+                <!--  -->
+                <span style="position: absolute; top: 8px; right: 18px">
                   <b-button
                     v-if="isAdmin"
                     class="btn btn-sm rounded-circle btn-action-custom"

@@ -105,18 +105,26 @@ export default {
       });
     };
 
-    const image1 = "http://localhost:8111/storage/avatars/1.png";
-    const image2 = "http://localhost:8111/storage/avatars/2.png";
-    const image3 = "http://localhost:8111/storage/avatars/3.png";
-    const image4 = "http://localhost:8111/storage/avatars/4.png";
-    const image5 = "http://localhost:8111/storage/avatars/5.png";
-    const image6 = "http://localhost:8111/storage/avatars/6.png";
-    const image7 = "http://localhost:8111/storage/avatars/7.png";
-    const image8 = "http://localhost:8111/storage/avatars/8.png";
-    const image9 = "http://localhost:8111/storage/avatars/9.png";
-    const image10 = "http://localhost:8111/storage/avatars/10.png";
-    const image11 = "http://localhost:8111/storage/avatars/11.png";
-    const image12 = "http://localhost:8111/storage/avatars/12.png";
+    let baseUrl = "http://143.198.208.110:8111";
+    if (
+      location.hostname === "localhost" ||
+      location.hostname === "127.0.0.1"
+    ) {
+      baseUrl = "http://localhost:8111";
+    }
+
+    const image1 = baseUrl + "/storage/avatars/1.png";
+    const image2 = baseUrl + "/storage/avatars/2.png";
+    const image3 = baseUrl + "/storage/avatars/3.png";
+    const image4 = baseUrl + "/storage/avatars/4.png";
+    const image5 = baseUrl + "/storage/avatars/5.png";
+    const image6 = baseUrl + "/storage/avatars/6.png";
+    const image7 = baseUrl + "/storage/avatars/7.png";
+    const image8 = baseUrl + "/storage/avatars/8.png";
+    const image9 = baseUrl + "/storage/avatars/9.png";
+    const image10 = baseUrl + "/storage/avatars/10.png";
+    const image11 = baseUrl + "/storage/avatars/11.png";
+    const image12 = baseUrl + "/storage/avatars/12.png";
 
     const isAdmin = ref(true);
     const isModal = ref(false);
@@ -232,11 +240,7 @@ export default {
               </b-form-group>
             </div>
             <div class="row">
-              <b-form-group
-                label="Full Name"
-                label-for="name"
-                class="col-md"
-              >
+              <b-form-group label="Full Name" label-for="name" class="col-md">
                 <validation-provider
                   #default="{ errors }"
                   name="Full Name"
@@ -254,15 +258,8 @@ export default {
             </div>
 
             <div class="row">
-              <b-form-group
-                label="Job"
-                label-for="job"
-                class="col-md"
-              >
-                <validation-provider
-                  #default="{ errors }"
-                  name="Job"
-                >
+              <b-form-group label="Job" label-for="job" class="col-md">
+                <validation-provider #default="{ errors }" name="Job">
                   <b-form-input
                     id="job"
                     placeholder=""
@@ -275,15 +272,8 @@ export default {
             </div>
 
             <div class="row">
-              <b-form-group
-                label="Email"
-                label-for="email"
-                class="col-md"
-              >
-                <validation-provider
-                  #default="{ errors }"
-                  name="Email"
-                >
+              <b-form-group label="Email" label-for="email" class="col-md">
+                <validation-provider #default="{ errors }" name="Email">
                   <b-form-input
                     id="email"
                     placeholder=""
@@ -294,7 +284,6 @@ export default {
                 </validation-provider>
               </b-form-group>
             </div>
-            
           </b-form>
         </validation-observer>
       </b-overlay>
