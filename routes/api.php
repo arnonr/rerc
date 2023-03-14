@@ -44,37 +44,37 @@ Route::group(['prefix' => 'user'], function () {
     Route::delete('/{id}', [UserController::class, 'delete']);
 });
 
-Route::group(['prefix' => 'activity'], function () {
-    Route::get('/{id}', [ActivityController::class, 'get']);
-    Route::get('/', [ActivityController::class, 'getAll']);
-    Route::post('/', [ActivityController::class, 'add']);
-    Route::put('/{id}', [ActivityController::class, 'edit']);
-    Route::delete('/{id}', [ActivityController::class, 'delete']);
-});
+// Route::group(['prefix' => 'activity'], function () {
+//     Route::get('/{id}', [ActivityController::class, 'get']);
+//     Route::get('/', [ActivityController::class, 'getAll']);
+//     Route::post('/', [ActivityController::class, 'add']);
+//     Route::put('/{id}', [ActivityController::class, 'edit']);
+//     Route::delete('/{id}', [ActivityController::class, 'delete']);
+// });
 
-Route::group(['prefix' => 'mou'], function () {
-    Route::get('/{id}', [MouController::class, 'get']);
-    Route::get('/', [MouController::class, 'getAll']);
-    Route::post('/', [MouController::class, 'add']);
-    Route::put('/{id}', [MouController::class, 'edit']);
-    Route::delete('/{id}', [MouController::class, 'delete']);
-});
+// Route::group(['prefix' => 'mou'], function () {
+//     Route::get('/{id}', [MouController::class, 'get']);
+//     Route::get('/', [MouController::class, 'getAll']);
+//     Route::post('/', [MouController::class, 'add']);
+//     Route::put('/{id}', [MouController::class, 'edit']);
+//     Route::delete('/{id}', [MouController::class, 'delete']);
+// });
 
-Route::group(['prefix' => 'country'], function () {
-    Route::get('/{id}', [CountryController::class, 'get']);
-    Route::get('/', [CountryController::class, 'getAll']);
-    Route::post('/', [CountryController::class, 'add']);
-    Route::put('/{id}', [CountryController::class, 'edit']);
-    Route::delete('/{id}', [CountryController::class, 'delete']);
-});
+// Route::group(['prefix' => 'country'], function () {
+//     Route::get('/{id}', [CountryController::class, 'get']);
+//     Route::get('/', [CountryController::class, 'getAll']);
+//     Route::post('/', [CountryController::class, 'add']);
+//     Route::put('/{id}', [CountryController::class, 'edit']);
+//     Route::delete('/{id}', [CountryController::class, 'delete']);
+// });
 
-Route::group(['prefix' => 'host'], function () {
-    Route::get('/{id}', [HostController::class, 'get']);
-    Route::get('/', [HostController::class, 'getAll']);
-    Route::post('/', [HostController::class, 'add']);
-    Route::put('/{id}', [HostController::class, 'edit']);
-    Route::delete('/{id}', [HostController::class, 'delete']);
-});
+// Route::group(['prefix' => 'host'], function () {
+//     Route::get('/{id}', [HostController::class, 'get']);
+//     Route::get('/', [HostController::class, 'getAll']);
+//     Route::post('/', [HostController::class, 'add']);
+//     Route::put('/{id}', [HostController::class, 'edit']);
+//     Route::delete('/{id}', [HostController::class, 'delete']);
+// });
 
 // Route::middleware('auth:api')->get('/user', function (Request $request) {
 //     return $request->user();

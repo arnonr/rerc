@@ -41,7 +41,6 @@ import store from "@/store";
 import { useToast } from "vue-toastification/composition";
 import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
 import { getUserData } from "@/auth/utils";
-import { FeatherIcon } from "vue-feather-icons";
 import { ValidationProvider, ValidationObserver } from "vee-validate";
 
 export default {
@@ -69,7 +68,6 @@ export default {
     BCardText,
     dayjs,
     BImg,
-    FeatherIcon,
     ValidationProvider,
     ValidationObserver,
     BFormTextarea,
