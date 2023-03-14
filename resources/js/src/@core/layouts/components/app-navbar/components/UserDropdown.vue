@@ -118,7 +118,7 @@
         icon="LayersIcon"
         class="mr-50"
       />
-      <span>หน้าหลัก</span>
+      <span>Home</span>
     </b-dropdown-item>
 
     <b-dropdown-item
@@ -130,7 +130,7 @@
         icon="CodepenIcon"
         class="mr-50"
       />
-      <span>ห้อง LAB</span>
+      <span>Lab Room</span>
     </b-dropdown-item>
 
     <b-dropdown-item
@@ -142,7 +142,7 @@
         icon="LayersIcon"
         class="mr-50"
       />
-      <span>โครงสร้างองค์กร</span>
+      <span>Organizational</span>
     </b-dropdown-item>
 
     <b-dropdown-item
@@ -154,7 +154,7 @@
         icon="UsersIcon"
         class="mr-50"
       />
-      <span>สมาชิก</span>
+      <span>Member</span>
     </b-dropdown-item>
 
     <b-dropdown-item
@@ -166,7 +166,7 @@
         icon="CalendarIcon"
         class="mr-50"
       />
-      <span>กิจกรรม</span>
+      <span>Calendar</span>
     </b-dropdown-item>
 
     <b-dropdown-item
@@ -178,7 +178,7 @@
         icon="AwardIcon"
         class="mr-50"
       />
-      <span>ผลงาน</span>
+      <span>Portfolio</span>
     </b-dropdown-item>
 
     <b-dropdown-item
@@ -190,7 +190,7 @@
         icon="BookIcon"
         class="mr-50"
       />
-      <span>การเรียนการสอน</span>
+      <span>Classroom</span>
     </b-dropdown-item>
     
     </b-nav-item-dropdown>

@@ -12,7 +12,7 @@
           </span>
           <h2 class="brand-text mb-0" style="display: inline-block">
             <!-- {{ appName }} -->
-            LAB ROOM
+            Renewable Energy Research Centre (RERC)
             <!-- <span class="sub-brand-text">มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ</span> -->
           </h2>
         </b-link>

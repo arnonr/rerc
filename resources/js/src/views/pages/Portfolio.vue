@@ -164,7 +164,7 @@ export default {
 
       <div class="row">
         <div class="col-md-4 mt-1 mb-2">
-          <b-img :src="image2" class="rounded" style="width: 400px" />
+          <b-img :src="image2" class="rounded img-fluid" style="width: 400px" />
         </div>
 
         <div class="col-md-8 mt-1 mb-2">
@@ -189,7 +189,7 @@ export default {
 
       <div class="row">
         <div class="col-md-4 mt-1 mb-2">
-          <b-img :src="image3" class="rounded" style="width: 400px" />
+          <b-img :src="image3" class="rounded img-fluid" style="width: 400px" />
         </div>
 
         <div class="col-md-8 mt-1 mb-2">

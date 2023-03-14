@@ -145,8 +145,17 @@ export default {
 <template>
   <div class="container-lg">
     <!-- Search -->
-    <div class=" mb-2 div-org text-center">
-      <h2 class="text-center">สมาชิก</h2>
+    <div class="mb-2 div-org text-center">
+      <b-button
+        v-if="isAdmin"
+        variant="primary"
+        @click="handleAddClick()"
+        class="float-right"
+      >
+        <feather-icon icon="PlusIcon" />
+        Add Member
+      </b-button>
+      <h2 class="text-center">Member</h2>
 
       <hr
         style="

@@ -14,12 +14,15 @@ import {
   BFormGroup,
   BCardText,
   BImg,
+  BModal,
+  BFormFile,
 } from "bootstrap-vue";
 import vSelect from "vue-select";
 import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import { Thai } from "flatpickr/dist/l10n/th.js";
 
+import { ValidationProvider, ValidationObserver } from "vee-validate";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
@@ -70,6 +73,10 @@ export default {
     Splide,
     SplideSlide,
     BImg,
+    BModal,
+    ValidationProvider,
+    ValidationObserver,
+    BFormFile,
   },
   data() {
     return {
@@ -112,6 +119,10 @@ export default {
         },
       });
     };
+
+    const isAdmin = ref(true);
+    const isModal = ref(false);
+    const isSubmit = ref(false);
 
     // const items = ref([]);
     // const isAdmin = getUserData().type == "admin" ? true : false;
@@ -397,12 +408,37 @@ export default {
       }
     });
 
+    const handleAddClick = () => {
+      // item.value = {
+      //   username: "",
+      //   email: "",
+      //   type: "",
+      // };
+      isModal.value = true;
+    };
+
+    const validationForm = (bvModalEvent) => {
+      bvModalEvent.preventDefault();
+      simpleRules.value.validate().then((success) => {
+        if (success) {
+          // onSubmit();
+          isModal.value = false;
+          isSubmit.value = false;
+        }
+      });
+    };
+
     return {
       image1,
       image2,
       image3,
       slideOptions,
       splide,
+      isAdmin,
+      isModal,
+      isSubmit,
+      handleAddClick,
+      validationForm,
     };
   },
 };
@@ -458,13 +494,322 @@ div.inner {
   -ms-transition: transform 0.5s ease-in-out;
   //   padding-right:1em;
 }
+
+.btn-action-custom {
+  width: 30px;
+  padding-right: 0px;
+  padding-left: 0px;
+}
 </style>
 
 <template>
   <div class="container-lg">
     <!-- Search -->
 
+    <b-modal
+      ref="modalForm"
+      id="modal-form"
+      cancel-variant="outline-secondary"
+      ok-title="Submit"
+      cancel-title="Close"
+      centered
+      size="xl"
+      title="Add Data"
+      :visible="isModal"
+      @ok="validationForm"
+      :ok-disabled="isSubmit"
+      :cancel-disabled="isSubmit"
+      @change="
+        (val) => {
+          isModal = val;
+        }
+      "
+    >
+      <b-overlay :show="isSubmit" opacity="0.17" spinner-variant="primary">
+        <validation-observer ref="simpleRules">
+          <div class="row">
+            <div class="col-md-12">
+              <b-button v-if="isAdmin" variant="primary" class="float-right">
+                <!-- @click="handleAddClick()" -->
+                <feather-icon icon="PlusIcon" />
+                Add Data
+              </b-button>
+            </div>
+
+            <div class="col-md-12 mt-3 p-2" style="background-color: #eee">
+              <div class="row">
+                <div class="col-md-2">
+                  <img
+                    :src="image1"
+                    alt="Sample 1"
+                    style="width: 200px"
+                    class="rounded"
+                  />
+                </div>
+                <div class="col-md-4 align-middle align-items-center pt-2">
+                  <b-form-group label="Upload Photo" label-for="slide_file">
+                    <validation-provider
+                      name="slide_file"
+                      #default="{ errors }"
+                      rules="required"
+                    >
+                      <b-form-file
+                        id="slide_file"
+                        placeholder="Choose a file or drop it here..."
+                        drop-placeholder="Drop file here..."
+                      />
+
+                      <small class="text-danger">{{ errors[0] }}</small>
+                    </validation-provider>
+                  </b-form-group>
+                </div>
+                <div class="col-md-4 align-middle align-items-center pt-2">
+                  <b-form-group
+                    label="Event URL"
+                    label-for="url"
+                    class="col-md align-middle"
+                  >
+                    <validation-provider #default="{ errors }" name="url">
+                      <b-form-input
+                        id="url"
+                        placeholder=""
+                        :state="errors.length > 0 ? false : null"
+                      />
+                      <!-- v-model="item.url" -->
+                      <small class="text-danger">{{ errors[0] }}</small>
+                    </validation-provider>
+                  </b-form-group>
+                </div>
+                <div class="col-md-2 align-middle align-items-center pt-3">
+                  <b-button
+                    v-if="isAdmin"
+                    class="btn btn-sm rounded-circle btn-action-custom"
+                    variant="info"
+                    ><feather-icon icon="ArrowLeftIcon"
+                  /></b-button>
+                  <b-button
+                    v-if="isAdmin"
+                    class="btn btn-sm rounded-circle btn-action-custom"
+                    variant="info"
+                    ><feather-icon icon="ArrowRightIcon"
+                  /></b-button>
+                  <b-button
+                    v-if="isAdmin"
+                    class="btn btn-sm rounded-circle btn-action-custom"
+                    variant="success"
+                    ><feather-icon icon="CheckIcon"
+                  /></b-button>
+                  <b-button
+                    v-if="isAdmin"
+                    class="btn btn-sm rounded-circle btn-action-custom"
+                    variant="danger"
+                    ><feather-icon icon="TrashIcon"
+                  /></b-button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-12 mt-1 p-2">
+              <div class="row">
+                <div class="col-md-2">
+                  <img
+                    :src="image2"
+                    alt="Sample 2"
+                    style="width: 200px"
+                    class="rounded"
+                  />
+                </div>
+                <div class="col-md-4 align-middle align-items-center pt-2">
+                  <b-form-group label="Upload Photo" label-for="slide_file">
+                    <validation-provider
+                      name="slide_file"
+                      #default="{ errors }"
+                      rules="required"
+                    >
+                      <b-form-file
+                        id="slide_file"
+                        placeholder="Choose a file or drop it here..."
+                        drop-placeholder="Drop file here..."
+                      />
+
+                      <small class="text-danger">{{ errors[0] }}</small>
+                    </validation-provider>
+                  </b-form-group>
+                </div>
+                <div class="col-md-4 align-middle align-items-center pt-2">
+                  <b-form-group
+                    label="Event URL"
+                    label-for="url"
+                    class="col-md align-middle"
+                  >
+                    <validation-provider #default="{ errors }" name="url">
+                      <b-form-input
+                        id="url"
+                        placeholder=""
+                        :state="errors.length > 0 ? false : null"
+                      />
+                      <!-- v-model="item.url" -->
+                      <small class="text-danger">{{ errors[0] }}</small>
+                    </validation-provider>
+                  </b-form-group>
+                </div>
+                <div class="col-md-2 align-middle align-items-center pt-3">
+                  <b-button
+                    class="btn btn-sm rounded-circle btn-action-custom"
+                    variant="info"
+                    ><feather-icon icon="ArrowLeftIcon"
+                  /></b-button>
+                  <b-button
+                    class="btn btn-sm rounded-circle btn-action-custom"
+                    variant="info"
+                    ><feather-icon icon="ArrowRightIcon"
+                  /></b-button>
+                  <b-button
+                    class="btn btn-sm rounded-circle btn-action-custom"
+                    variant="success"
+                    ><feather-icon icon="CheckIcon"
+                  /></b-button>
+                  <b-button
+                    class="btn btn-sm rounded-circle btn-action-custom"
+                    variant="danger"
+                    ><feather-icon icon="TrashIcon"
+                  /></b-button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-12 mt-1 p-2" style="background-color: #eee">
+              <div class="row">
+                <div class="col-md-2">
+                  <img
+                    :src="image3"
+                    alt="Sample 3"
+                    style="width: 200px"
+                    class="rounded"
+                  />
+                </div>
+                <div class="col-md-4 align-middle align-items-center pt-2">
+                  <b-form-group label="Upload Photo" label-for="slide_file">
+                    <validation-provider
+                      name="slide_file"
+                      #default="{ errors }"
+                      rules="required"
+                    >
+                      <b-form-file
+                        id="slide_file"
+                        placeholder="Choose a file or drop it here..."
+                        drop-placeholder="Drop file here..."
+                      />
+
+                      <small class="text-danger">{{ errors[0] }}</small>
+                    </validation-provider>
+                  </b-form-group>
+                </div>
+                <div class="col-md-4 align-middle align-items-center pt-2">
+                  <b-form-group
+                    label="Event URL"
+                    label-for="url"
+                    class="col-md align-middle"
+                  >
+                    <validation-provider #default="{ errors }" name="url">
+                      <b-form-input
+                        id="url"
+                        placeholder=""
+                        :state="errors.length > 0 ? false : null"
+                      />
+                      <!-- v-model="item.url" -->
+                      <small class="text-danger">{{ errors[0] }}</small>
+                    </validation-provider>
+                  </b-form-group>
+                </div>
+                <div class="col-md-2 align-middle align-items-center pt-3">
+                  <b-button
+                    class="btn btn-sm rounded-circle btn-action-custom"
+                    variant="info"
+                    ><feather-icon icon="ArrowLeftIcon"
+                  /></b-button>
+                  <b-button
+                    class="btn btn-sm rounded-circle btn-action-custom"
+                    variant="info"
+                    ><feather-icon icon="ArrowRightIcon"
+                  /></b-button>
+                  <b-button
+                    class="btn btn-sm rounded-circle btn-action-custom"
+                    variant="success"
+                    ><feather-icon icon="CheckIcon"
+                  /></b-button>
+                  <b-button
+                    class="btn btn-sm rounded-circle btn-action-custom"
+                    variant="danger"
+                    ><feather-icon icon="TrashIcon"
+                  /></b-button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- <b-form>
+            <div class="row">
+              <b-form-group
+                label="ICITaccount"
+                label-for="username"
+                class="col-md"
+              >
+                <validation-provider
+                  #default="{ errors }"
+                  name="username"
+                  rules="required"
+                >
+                  <b-form-input
+                    id="username"
+                    placeholder=""
+                    :disabled="!isAdd"
+                    v-model="item.username"
+                    :state="errors.length > 0 ? false : null"
+                  />
+                  <small class="text-danger">{{ errors[0] }}</small>
+                </validation-provider>
+              </b-form-group>
+            </div>
+            <div class="row">
+              <b-form-group
+                label="ประเภทผู้ใช้งาน/User Type:"
+                label-for="type"
+                class="col-md"
+              >
+                <validation-provider
+                  #default="{ errors }"
+                  name="type"
+                  rules="required"
+                >
+                  <v-select
+                    input-id="type"
+                    label="title"
+                    v-model="item.type"
+                    :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
+                    :options="selectOptions.type"
+                    placeholder=""
+                    :clearable="false"
+                  />
+                  <small class="text-danger">{{ errors[0] }}</small>
+                </validation-provider>
+              </b-form-group>
+            </div>
+          </b-form> -->
+        </validation-observer>
+      </b-overlay>
+    </b-modal>
+
     <div class="row">
+      <div class="col-md-12 text-right">
+        <b-button
+          v-if="isAdmin"
+          variant="warning"
+          @click="handleAddClick()"
+          class="float-right rounded-pill mb-2"
+        >
+          <feather-icon icon="EditIcon" />
+        </b-button>
+      </div>
       <div class="col-md-12">
         <div class="div-slide">
           <Splide
@@ -476,7 +821,7 @@ div.inner {
               <div class="inner">
                 <img :src="image1" alt="Sample 1" />
 
-                <div class="text-center">
+                <!-- <div class="text-center">
                   <button
                     style="margin-top: -2em; background-color: #fff"
                     class="btn btn-outline-primary"
@@ -488,13 +833,13 @@ div.inner {
                   >
                     ดูเพิ่มเติม
                   </button>
-                </div>
+                </div> -->
               </div>
             </SplideSlide>
             <SplideSlide>
               <div class="inner">
                 <img :src="image2" alt="Sample 2" />
-                <div class="text-center">
+                <!-- <div class="text-center">
                   <button
                     style="margin-top: -2em; background-color: #fff"
                     class="btn btn-outline-primary"
@@ -506,13 +851,13 @@ div.inner {
                   >
                     ดูเพิ่มเติม
                   </button>
-                </div>
+                </div> -->
               </div>
             </SplideSlide>
             <SplideSlide>
               <div class="inner">
                 <img :src="image3" alt="Sample 2" />
-                <div class="text-center">
+                <!-- <div class="text-center">
                   <button
                     style="margin-top: -2em; background-color: #fff !important"
                     class="btn btn-outline-primary"
@@ -524,7 +869,7 @@ div.inner {
                   >
                     ดูเพิ่มเติม
                   </button>
-                </div>
+                </div> -->
               </div>
             </SplideSlide>
           </Splide>

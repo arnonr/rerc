@@ -3,7 +3,7 @@
     <span class="d-block d-md-inline-block mt-25">
       <!-- © {{ new Date().getFullYear()+543 }} -->
       <span class="d-sm-inline-block"
-        >ติดต่อสอบถามข้อมูลได้ที่ :
+        >Contact :
         <b-img
           :src="FacebookIcon"
           alt="logo"

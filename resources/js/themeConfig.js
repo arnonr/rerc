@@ -9,7 +9,7 @@ export const $themeBreakpoints = {}
 // APP CONFIG
 export const $themeConfig = {
   app: {
-    appName: 'RERC', // Will update name in navigation menu (Branding)
+    appName: 'Renewable Energy Research Centre (RERC)', // Will update name in navigation menu (Branding)
     // eslint-disable-next-line global-require
     appLogoImage: require('@/assets/images/logo/logo-rerc.jpg'), // Will update logo in navigation menu (Branding)
   },
