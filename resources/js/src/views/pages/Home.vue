@@ -37,7 +37,7 @@ import {
   onMounted,
 } from "@vue/composition-api";
 import store from "@/store";
-// import mouStoreModule from "./mouStoreModule";
+import homeStoreModule from "./homeStoreModule";
 
 import { useToast } from "vue-toastification/composition";
 import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
@@ -77,6 +77,8 @@ export default {
     ValidationProvider,
     ValidationObserver,
     BFormFile,
+    BPagination,
+    dayjs,
   },
   data() {
     return {
@@ -92,15 +94,13 @@ export default {
     };
   },
   setup() {
-    // const MOU_APP_STORE_MODULE_NAME = "mou";
+    const HOME_APP_STORE_MODULE_NAME = "home";
 
-    // // // Register module
-    // if (!store.hasModule(MOU_APP_STORE_MODULE_NAME))
-    //   store.registerModule(MOU_APP_STORE_MODULE_NAME, mouStoreModule);
+    // Register module
+    if (!store.hasModule(HOME_APP_STORE_MODULE_NAME))
+      store.registerModule(HOME_APP_STORE_MODULE_NAME, homeStoreModule);
 
-    onMounted(() => {
-      console.log("FREEDOM");
-    });
+    onMounted(() => {});
     // UnRegister on leave
     onUnmounted(() => {
       // if (store.hasModule(MOU_APP_STORE_MODULE_NAME))
@@ -120,262 +120,94 @@ export default {
       });
     };
 
+    const items = ref([]);
+    const splide = ref();
+    //
     const isAdmin = ref(true);
-    const isModal = ref(false);
-    const isSubmit = ref(false);
-
-    // const items = ref([]);
     // const isAdmin = getUserData().type == "admin" ? true : false;
     // const isStaff = getUserData().type == "staff" ? true : false;
-    // const isOverLay = ref(false);
-    // const perPage = ref({ title: "20", code: 20 });
-    // const currentPage = ref(1);
-    // const totalPage = ref(1);
-    // const totalItems = ref(0);
-    // const orderBy = ref({
-    //   title: "วันเริ่มสัญญา/Start Date",
-    //   code: "start_date",
-    // });
-    // const order = ref({ title: "มาก -> น้อย", code: "desc" });
+    const isModal = ref(false);
+    const isSubmit = ref(false);
+    const isOverLay = ref(false);
 
-    // const advancedSearch = reactive({
-    //   name: "",
-    //   partner: "",
-    //   host_id: null,
-    //   country_code: null,
-    //   start_date: null,
-    //   end_date: null,
-    //   type: null,
-    //   // is_publish: { title: "Publish", code: 1 },
-    //   status: null,
-    //   year: null,
-    // });
+    const perPage = ref({ title: "20", code: 20 });
+    const currentPage = ref(1);
+    const totalPage = ref(1);
+    const totalItems = ref(0);
+    const orderBy = ref({
+      title: "Level",
+      code: "level",
+    });
+    const order = ref({ title: "น้อย -> มาก ", code: "asc" });
 
-    // const resetAdvancedSearch = () => {
-    //   advancedSearch.name = "";
-    //   advancedSearch.partner = "";
-    //   advancedSearch.host_id = null;
-    //   advancedSearch.country_code = null;
-    //   advancedSearch.start_date = null;
-    //   advancedSearch.end_date = null;
-    //   advancedSearch.type = null;
-    //   advancedSearch.status = null;
-    //   // advancedSearch.is_publish = { title: "Publish", code: 1 };
-    // };
+    const selectOptions = ref({
+      // is_publish: [
+      //   { title: "Publish", code: 1 },
+      //   { title: "Non-Publish", code: 0 },
+      // ],
+      perPage: [
+        { title: "20", code: 20 },
+        { title: "40", code: 40 },
+        { title: "60", code: 60 },
+      ],
+      orderBy: [{ title: "Level", code: "level" }],
+      order: [
+        { title: "น้อย -> มาก", code: "asc" },
+        { title: "มาก -> น้อย", code: "desc" },
+      ],
+    });
 
-    // const selectOptions = ref({
-    //   hosts: [],
-    //   countries: [],
-    //   types: [
-    //     { title: "ในประเทศ (Domestic Type)", code: 1 },
-    //     { title: "ต่างประเทศ (Foreign Type)", code: 2 },
-    //   ],
-    //   statuses: [
-    //     { title: "Active", code: "active" },
-    //     { title: "InActive", code: "inActive" },
-    //     { title: "Warning", code: "warning" },
-    //   ],
-    //   // is_publish: [
-    //   //   { title: "Publish", code: 1 },
-    //   //   { title: "Non-Publish", code: 0 },
-    //   // ],
-    //   perPage: [
-    //     { title: "20", code: 20 },
-    //     { title: "40", code: 40 },
-    //     { title: "60", code: 60 },
-    //   ],
-    //   orderBy: [
-    //     { title: "องค์กรคู่สัญญา/Partner", code: "partner" },
-    //     { title: "หน่วยงาน/Host", code: "host.name" },
-    //     { title: "ประเภทความร่วมมือ/Mou Type", code: "type" },
-    //     { title: "ประเทศคู่สัญญา/Country", code: "country.ct_nameTHA" },
-    //     { title: "สถานะความร่วมมือ/Status", code: "status" },
-    //     { title: "วันเริ่มสัญญา/Start Date", code: "start_date" },
-    //     { title: "วันสิ้นสุดสัญญา/End Date", code: "end_date" },
-    //     // { title: "ชื่อความร่วมมือ/MOU Name", code: "name" },
-    //   ],
-    //   order: [
-    //     { title: "น้อย -> มาก", code: "asc" },
-    //     { title: "มาก -> น้อย", code: "desc" },
-    //   ],
-    //   years: [],
-    // });
+    const fetchItems = () => {
+      // let search = { ...advancedSearch };
 
-    // const yearSelect = dayjs().locale("th").format("BBBB");
-    // selectOptions.value.years.push({
-    //   title: String(yearSelect),
-    //   code: String(yearSelect),
-    // });
-    // for (let i = 1; i <= 9; i++) {
-    //   selectOptions.value.years.push({
-    //     title: String(parseInt(yearSelect) - i),
-    //     code: String(parseInt(yearSelect) - i),
-    //   });
-    // }
+      // if (search.is_publish) {
+      //   if (search.is_publish.hasOwnProperty("code")) {
+      //     search.is_publish = search.is_publish.code;
+      //   }
+      // }
 
-    // store
-    //   .dispatch("mou/fetchHosts")
-    //   .then((response) => {
-    //     const { data } = response.data;
-    //     selectOptions.value.hosts = data.map((d) => {
-    //       return {
-    //         code: d.id,
-    //         title: d.name,
-    //       };
-    //     });
-    //   })
-    //   .catch((error) => {
-    //     console.log(error);
-    //     toast({
-    //       component: ToastificationContent,
-    //       props: {
-    //         title: "Error fetching Host's list",
-    //         icon: "AlertTriangleIcon",
-    //         variant: "danger",
-    //       },
-    //     });
-    //   });
+      isOverLay.value = true;
+      store
+        .dispatch("home/fetchSlides", {
+          perPage: perPage.value.code,
+          currentPage: currentPage.value == 0 ? undefined : currentPage.value,
+          orderBy: orderBy.value.code,
+          order: order.value.code,
+          // ...search,
+        })
+        .then((response) => {
+          // const { data, totalData, totalPage } = response.data;
+          items.value = response.data.data;
+          totalPage.value = response.data.totalPage;
+          totalItems.value = response.data.totalData;
+          isOverLay.value = false;
 
-    // store
-    //   .dispatch("mou/fetchCountries")
-    //   .then((response) => {
-    //     const { data } = response.data;
-    //     selectOptions.value.countries = data.map((d) => {
-    //       return {
-    //         code: d.ct_code,
-    //         title: d.ct_nameTHA + " (" + d.ct_nameENG + ")",
-    //       };
-    //     });
-    //   })
-    //   .catch((error) => {
-    //     console.log(error);
-    //     toast({
-    //       component: ToastificationContent,
-    //       props: {
-    //         title: "Error fetching Country's list",
-    //         icon: "AlertTriangleIcon",
-    //         variant: "danger",
-    //       },
-    //     });
-    //   });
+          // if (splide.value && splide.value.splide) {
+          // splide.value.go(0);
+          // splide.value.splide.refresh();
+          // }
+        })
+        .catch((error) => {
+          console.log(error);
+          toast({
+            component: ToastificationContent,
+            props: {
+              title: "Error fetching Slide's list",
+              icon: "AlertTriangleIcon",
+              variant: "danger",
+            },
+          });
+          isOverLay.value = false;
+        });
+    };
 
-    // const fetchItems = () => {
-    //   let search = { ...advancedSearch };
-    //   if (search.host_id) {
-    //     if (search.host_id.hasOwnProperty("code")) {
-    //       search.host_id = search.host_id.code;
-    //     }
-    //   }
-    //   if (search.country_code) {
-    //     if (search.country_code.hasOwnProperty("code")) {
-    //       search.country_code = search.country_code.code;
-    //     }
-    //   }
-    //   if (search.type) {
-    //     if (search.type.hasOwnProperty("code")) {
-    //       search.type = search.type.code;
-    //     }
-    //   }
-    //   if (search.status) {
-    //     if (search.status.hasOwnProperty("code")) {
-    //       search.status = search.status.code;
-    //     }
-    //   }
+    const onChangePage = (page) => {
+      currentPage.value = page;
+    };
 
-    //   if (search.year) {
-    //     if (search.year.hasOwnProperty("code")) {
-    //       search.year = search.year.code;
-    //     }
-    //   }
-    //   // if (search.is_publish) {
-    //   //   if (search.is_publish.hasOwnProperty("code")) {
-    //   //     search.is_publish = search.is_publish.code;
-    //   //   }
-    //   // }
-
-    //   isOverLay.value = true;
-    //   store
-    //     .dispatch("mou/fetchMous", {
-    //       perPage: perPage.value.code,
-    //       currentPage: currentPage.value == 0 ? undefined : currentPage.value,
-    //       orderBy: orderBy.value.code,
-    //       order: order.value.code,
-    //       ...search,
-    //     })
-    //     .then((response) => {
-    //       // const { data, totalData, totalPage } = response.data;
-    //       items.value = response.data.data;
-    //       totalPage.value = response.data.totalPage;
-    //       totalItems.value = response.data.totalData;
-    //       isOverLay.value = false;
-    //     })
-    //     .catch((error) => {
-    //       console.log(error);
-    //       toast({
-    //         component: ToastificationContent,
-    //         props: {
-    //           title: "Error fetching Mou's list",
-    //           icon: "AlertTriangleIcon",
-    //           variant: "danger",
-    //         },
-    //       });
-    //       isOverLay.value = false;
-    //     });
-    // };
-    // fetchItems();
-
-    // watch(
-    //   () => advancedSearch.type,
-    //   (value) => {
-    //     if (value) {
-    //       if (value.code == 1) {
-    //         advancedSearch.country_code = { title: "ไทย", code: "THA" };
-    //       } else {
-    //         advancedSearch.country_code = {
-    //           title: "-- All Country --",
-    //           code: null,
-    //         };
-    //       }
-    //     } else {
-    //       advancedSearch.country_code = {
-    //         title: "-- All Country --",
-    //         code: null,
-    //       };
-    //     }
-    //   }
-    // );
-
-    // watchEffect(() => {
-    //   fetchItems();
-    // });
-
-    // const onChangePage = (page) => {
-    //   currentPage.value = page;
-    // };
-
-    // const displayDateInput = (date) => {
-    //   return date ? dayjs(date).locale("th").format("DD/MM/BBBB") : date;
-    // };
-
-    // return {
-    //   items,
-    //   totalItems,
-    //   isOverLay,
-    //   selectOptions,
-    //   advancedSearch,
-    //   resetAdvancedSearch,
-    //   order,
-    //   orderBy,
-    //   perPage,
-    //   currentPage,
-    //   totalPage,
-    //   onChangePage,
-    //   dayjs,
-    //   isAdmin,
-    //   isStaff,
-    //   displayDateInput,
-    // formatYear
-    // };
+    const displayDateInput = (date) => {
+      return date ? dayjs(date).locale("th").format("DD/MM/BBBB") : date;
+    };
 
     let baseUrl = "http://143.198.208.110:8111";
     if (
@@ -385,9 +217,6 @@ export default {
       baseUrl = "http://localhost:8111";
     }
 
-    const image1 = baseUrl + "/storage/lab/image1.jpg";
-    const image2 = baseUrl + "/storage/lab/image2.jpg";
-    const image3 = baseUrl + "/storage/lab/image3.jpg";
     const slideOptions = {
       rewind: true,
       // rewindSpeed: 1000,
@@ -404,16 +233,16 @@ export default {
       focus: "center",
       trimSpace: false,
       start: 1,
+      lazyLoad: true,
       // slideFocus: true,
       // drag: true,
     };
 
-    const splide = ref();
-
     onMounted(() => {
-      if (splide.value && splide.value.splide) {
-        splide.value.go(0);
-      }
+      fetchItems();
+      splide.value.go(0);
+      // if (splide.value && splide.value.splide) {
+      // }
     });
 
     const handleAddClick = () => {
@@ -437,9 +266,18 @@ export default {
     };
 
     return {
-      image1,
-      image2,
-      image3,
+      items,
+      totalItems,
+      isOverLay,
+      selectOptions,
+      order,
+      orderBy,
+      perPage,
+      currentPage,
+      onChangePage,
+      totalPage,
+      dayjs,
+      displayDateInput,
       slideOptions,
       splide,
       isAdmin,
@@ -508,6 +346,12 @@ div.inner {
   padding-right: 0px;
   padding-left: 0px;
 }
+
+.hr-custom {
+  width: 80%;
+  border-width: 0.1em;
+  border-color: rgba(2, 155, 249, 0.5);
+}
 </style>
 
 <template>
@@ -544,11 +388,15 @@ div.inner {
               </b-button>
             </div>
 
-            <div class="col-md-12 mt-3 p-2" style="background-color: #eee">
+            <div
+              class="col-md-12 mt-3 p-2"
+              style="background-color: #eee"
+              v-for="it in items"
+            >
               <div class="row">
                 <div class="col-md-2">
                   <img
-                    :src="image1"
+                    :src="it.slide_file"
                     alt="Sample 1"
                     style="width: 200px"
                     class="rounded"
@@ -609,144 +457,6 @@ div.inner {
                   /></b-button>
                   <b-button
                     v-if="isAdmin"
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="danger"
-                    ><feather-icon icon="TrashIcon"
-                  /></b-button>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-md-12 mt-1 p-2">
-              <div class="row">
-                <div class="col-md-2">
-                  <img
-                    :src="image2"
-                    alt="Sample 2"
-                    style="width: 200px"
-                    class="rounded"
-                  />
-                </div>
-                <div class="col-md-4 align-middle align-items-center pt-2">
-                  <b-form-group label="Upload Photo" label-for="slide_file">
-                    <validation-provider
-                      name="slide_file"
-                      #default="{ errors }"
-                      rules="required"
-                    >
-                      <b-form-file
-                        id="slide_file"
-                        placeholder="Choose a file or drop it here..."
-                        drop-placeholder="Drop file here..."
-                      />
-
-                      <small class="text-danger">{{ errors[0] }}</small>
-                    </validation-provider>
-                  </b-form-group>
-                </div>
-                <div class="col-md-4 align-middle align-items-center pt-2">
-                  <b-form-group
-                    label="Event URL"
-                    label-for="url"
-                    class="col-md align-middle"
-                  >
-                    <validation-provider #default="{ errors }" name="url">
-                      <b-form-input
-                        id="url"
-                        placeholder=""
-                        :state="errors.length > 0 ? false : null"
-                      />
-                      <!-- v-model="item.url" -->
-                      <small class="text-danger">{{ errors[0] }}</small>
-                    </validation-provider>
-                  </b-form-group>
-                </div>
-                <div class="col-md-2 align-middle align-items-center pt-3">
-                  <b-button
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="info"
-                    ><feather-icon icon="ArrowLeftIcon"
-                  /></b-button>
-                  <b-button
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="info"
-                    ><feather-icon icon="ArrowRightIcon"
-                  /></b-button>
-                  <b-button
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="success"
-                    ><feather-icon icon="CheckIcon"
-                  /></b-button>
-                  <b-button
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="danger"
-                    ><feather-icon icon="TrashIcon"
-                  /></b-button>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-md-12 mt-1 p-2" style="background-color: #eee">
-              <div class="row">
-                <div class="col-md-2">
-                  <img
-                    :src="image3"
-                    alt="Sample 3"
-                    style="width: 200px"
-                    class="rounded"
-                  />
-                </div>
-                <div class="col-md-4 align-middle align-items-center pt-2">
-                  <b-form-group label="Upload Photo" label-for="slide_file">
-                    <validation-provider
-                      name="slide_file"
-                      #default="{ errors }"
-                      rules="required"
-                    >
-                      <b-form-file
-                        id="slide_file"
-                        placeholder="Choose a file or drop it here..."
-                        drop-placeholder="Drop file here..."
-                      />
-
-                      <small class="text-danger">{{ errors[0] }}</small>
-                    </validation-provider>
-                  </b-form-group>
-                </div>
-                <div class="col-md-4 align-middle align-items-center pt-2">
-                  <b-form-group
-                    label="Event URL"
-                    label-for="url"
-                    class="col-md align-middle"
-                  >
-                    <validation-provider #default="{ errors }" name="url">
-                      <b-form-input
-                        id="url"
-                        placeholder=""
-                        :state="errors.length > 0 ? false : null"
-                      />
-                      <!-- v-model="item.url" -->
-                      <small class="text-danger">{{ errors[0] }}</small>
-                    </validation-provider>
-                  </b-form-group>
-                </div>
-                <div class="col-md-2 align-middle align-items-center pt-3">
-                  <b-button
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="info"
-                    ><feather-icon icon="ArrowLeftIcon"
-                  /></b-button>
-                  <b-button
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="info"
-                    ><feather-icon icon="ArrowRightIcon"
-                  /></b-button>
-                  <b-button
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="success"
-                    ><feather-icon icon="CheckIcon"
-                  /></b-button>
-                  <b-button
                     class="btn btn-sm rounded-circle btn-action-custom"
                     variant="danger"
                     ><feather-icon icon="TrashIcon"
@@ -823,51 +533,19 @@ div.inner {
           <Splide
             :options="slideOptions"
             aria-label="Vue Splide Example"
-            ref="splide"
+            ref="splide"  
           >
-            <SplideSlide>
+            <SplideSlide v-for="it in items" :key="it.id">
               <div class="inner">
-                <img :src="image1" alt="Sample 1" />
+                  <img
+                    :src="it.slide_file"
+                  :alt="it.link_url"
+                  :data-splide-lazy="it.slide_file"
+                />
 
                 <!-- <div class="text-center">
                   <button
                     style="margin-top: -2em; background-color: #fff"
-                    class="btn btn-outline-primary"
-                    @click="
-                      $router.push({
-                        name: 'lab-room',
-                      })
-                    "
-                  >
-                    ดูเพิ่มเติม
-                  </button>
-                </div> -->
-              </div>
-            </SplideSlide>
-            <SplideSlide>
-              <div class="inner">
-                <img :src="image2" alt="Sample 2" />
-                <!-- <div class="text-center">
-                  <button
-                    style="margin-top: -2em; background-color: #fff"
-                    class="btn btn-outline-primary"
-                    @click="
-                      $router.push({
-                        name: 'lab-room',
-                      })
-                    "
-                  >
-                    ดูเพิ่มเติม
-                  </button>
-                </div> -->
-              </div>
-            </SplideSlide>
-            <SplideSlide>
-              <div class="inner">
-                <img :src="image3" alt="Sample 2" />
-                <!-- <div class="text-center">
-                  <button
-                    style="margin-top: -2em; background-color: #fff !important"
                     class="btn btn-outline-primary"
                     @click="
                       $router.push({
@@ -885,12 +563,6 @@ div.inner {
       </div>
     </div>
 
-    <hr
-      style="
-        width: 80%;
-        border-width: 0.1em;
-        border-color: rgba(2, 155, 249, 0.5);
-      "
-    />
+    <hr class="hr-custom" />
   </div>
 </template>

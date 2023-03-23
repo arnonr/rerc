@@ -114,10 +114,12 @@ export default {
     ) {
       baseUrl = "http://localhost:8111";
     }
-
+    
+    // 
     const image1 = baseUrl + "/storage/lab-room/lab1.jpg";
     const image2 = baseUrl + "/storage/lab-room/lab5.jpg";
     const image3 = baseUrl + "/storage/lab-room/lab7.jpg";
+    // 
 
     const handleAddClick = () => {
       isModal.value = true;

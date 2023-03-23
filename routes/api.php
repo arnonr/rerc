@@ -9,6 +9,8 @@ use App\Http\Controllers\CountryController;
 use App\Http\Controllers\MouController;
 use App\Http\Controllers\HostController;
 use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\SlideController;
+use App\Http\Controllers\LabRoomController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,13 +46,22 @@ Route::group(['prefix' => 'user'], function () {
     Route::delete('/{id}', [UserController::class, 'delete']);
 });
 
-// Route::group(['prefix' => 'activity'], function () {
-//     Route::get('/{id}', [ActivityController::class, 'get']);
-//     Route::get('/', [ActivityController::class, 'getAll']);
-//     Route::post('/', [ActivityController::class, 'add']);
-//     Route::put('/{id}', [ActivityController::class, 'edit']);
-//     Route::delete('/{id}', [ActivityController::class, 'delete']);
-// });
+Route::group(['prefix' => 'slide'], function () {
+    Route::get('/{id}', [SlideController::class, 'get']);
+    Route::get('/', [SlideController::class, 'getAll']);
+    Route::post('/', [SlideController::class, 'add']);
+    Route::put('/{id}', [SlideController::class, 'edit']);
+    Route::delete('/{id}', [SlideController::class, 'delete']);
+});
+
+Route::group(['prefix' => 'lab-room'], function () {
+    Route::get('/{id}', [LabRoomController::class, 'get']);
+    Route::get('/',     [LabRoomController::class, 'getAll']);
+    Route::post('/', [LabRoomController::class, 'add']);
+    Route::put('/{id}', [LabRoomController::class, 'edit']);
+    Route::delete('/{id}', [LabRoomController::class, 'delete']);
+});
+
 
 // Route::group(['prefix' => 'mou'], function () {
 //     Route::get('/{id}', [MouController::class, 'get']);
