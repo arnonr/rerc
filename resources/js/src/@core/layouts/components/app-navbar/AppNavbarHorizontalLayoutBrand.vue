@@ -10,11 +10,18 @@
               style="max-width: 70px; margin-left: 0.5em"
             />
           </span>
-          <h2 class="brand-text mb-0" style="display: inline-block">
+          <h2 class="brand-text mb-0 d-none d-md-inline">
             <!-- {{ appName }} -->
             Renewable Energy Research Centre (RERC)
             <!-- <span class="sub-brand-text">มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ</span> -->
           </h2>
+
+          <h2 class="brand-text mb-0 d-inline d-md-none">
+            <!-- {{ appName }} -->
+            RERC
+            <!-- <span class="sub-brand-text">มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ</span> -->
+          </h2>
+          
         </b-link>
       </li>
     </ul>

@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\LabRoom;
 use Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 const whitelist = ['127.0.0.1', "::1","localhost:8111"];
 
@@ -103,14 +105,14 @@ class LabRoomController extends Controller
     public function add(Request $request)
     {
         $request->validate([
-            'name as required',
-            'lab_room_file as required',
+            'name' => 'required',
+            'lab_room_file' => 'required',
         ]);
 
         $pathLabRoom = null;
         if(($request->lab_room_file != "") && ($request->lab_room_file != 'null')){
             $fileNameLabRoom = 'lab_room-'.rand(10,100).'-'.$request->lab_room_file->getClientOriginalName();
-            $pathLabRoom = '/slide/'.$fileNameLabRoom;
+            $pathLabRoom = '/lab-room/'.$fileNameLabRoom;
             Storage::disk('public')->put($pathLabRoom, file_get_contents($request->lab_room_file));
         }else{
             return response()->json([
@@ -119,8 +121,8 @@ class LabRoomController extends Controller
         }
 
         $level = 1;
-        if($request->level == null){
-            $check_level = LabRoom::max('level')->first();
+        if(($request->level == null) || ($request->level == 'null')){
+            $check_level = LabRoom::max('level');
             if($check_level){
                 $level = $check_level + 1;
             }
@@ -146,9 +148,7 @@ class LabRoomController extends Controller
     public function edit($id, Request $request)
     {
         $request->validate([
-            'id as required',
-            'name as required',
-            'lab_room_file as required',
+            'id' => 'required',
         ]);
 
         $id = $request->id;
@@ -158,25 +158,17 @@ class LabRoomController extends Controller
         $pathLabRoom = null;
         if(($request->lab_room_file != "") && ($request->lab_room_file != 'null')){
             $fileNameLabRoom = 'lab_room-'.rand(10,100).'-'.$request->lab_room_file->getClientOriginalName();
-            $pathLabRoom = '/slide/'.$fileNameLabRoom;
+            $pathLabRoom = '/lab-room/'.$fileNameLabRoom;
             Storage::disk('public')->put($pathLabRoom, file_get_contents($request->lab_room_file));
         }else{
             $pathLabRoom = $item->lab_room_file;
         }
 
-        $level = 1;
-        if($request->level == null){
-            $check_level = LabRoom::max('level')->first();
-            if($check_level){
-                $level = $check_level + 1;
-            }
-        }
-
         $item->lab_room_file = $pathLabRoom;
-        $item->name = $request->name;
-        $item->detail = $request->detail;
-        $item->level = $level;
-        $item->is_publish = $request->is_publish;
+        $item->name = isset($request->name) ? $request->name : $item->name;
+        $item->detail = isset($request->detail) ? $request->detail : $item->detail;
+        // $item->level = $level;
+        $item->is_publish = isset($request->is_publish) ? $request->is_publish : $item->is_publish;
         $item->updated_by = 'arnonr';
         $item->save();
 
@@ -192,13 +184,65 @@ class LabRoomController extends Controller
     {
         $item = LabRoom::where('id', $id)->first();
 
+        $item->level = null;
+        $item->is_publish = 0;
         $item->deleted_at = Carbon::now();
         $item->save();
+
+        // เรียงลำดับใหม่
+        $items = LabRoom::where('deleted_at', null)->orderBy('level', 'asc')->get();
+
+        $i = 1; 
+        foreach($items as $it){
+            $it->level = $i;
+            $i++;
+            $it->save();
+        }
 
         $responseData = [
             'message' => 'success'
         ];
 
+        return response()->json($responseData, 200);
+    }
+
+    public function editLevel($id, Request $request)
+    {
+        $request->validate([
+            'id as required',
+            'type as required',
+        ]);
+
+        $id = $request->id;
+        $type = $request->type;
+
+        $item = LabRoom::where('id', $id)->first();
+
+        $item1 = null;
+        if($type == 'IC'){
+            $item1 = LabRoom::where('level', $item->level + 1)->first();
+        }
+
+        if($type == 'DC'){
+            $item1 = LabRoom::where('level', $item->level - 1)->first();
+        }
+
+        if($item1 != null){
+            $level = $item1->level;
+            $level1 = $item->level;
+
+            $item->level = $level;
+            $item->save();
+
+            $item1->level = $level1;
+            $item1->save();
+        }
+
+        $responseData = [
+            'message' => 'success',
+            // 'data' => $item,
+        ];
+        
         return response()->json($responseData, 200);
     }
 }

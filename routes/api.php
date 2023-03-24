@@ -55,6 +55,7 @@ Route::group(['prefix' => 'slide'], function () {
 });
 
 Route::group(['prefix' => 'lab-room'], function () {
+    Route::put('/level/{id}', [LabRoomController::class, 'editLevel']);
     Route::get('/{id}', [LabRoomController::class, 'get']);
     Route::get('/',     [LabRoomController::class, 'getAll']);
     Route::post('/', [LabRoomController::class, 'add']);
