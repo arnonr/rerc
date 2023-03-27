@@ -3,7 +3,6 @@ import {
   BCard,
   BRow,
   BCol,
-  BFormInput,
   BButton,
   BLink,
   BDropdown,
@@ -11,37 +10,37 @@ import {
   BPagination,
   BSpinner,
   BOverlay,
-  BFormGroup,
   BCardText,
   BImg,
+  // Form
   BForm,
+  BFormGroup,
   BFormFile,
+  BFormInput,
   BFormTextarea,
+  BInputGroup,
+  BInputGroupPrepend,
 } from "bootstrap-vue";
 import vSelect from "vue-select";
 import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import { Thai } from "flatpickr/dist/l10n/th.js";
+import { ValidationProvider, ValidationObserver } from "vee-validate";
 
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
 dayjs.extend(buddhistEra);
 
-import {
-  ref,
-  watch,
-  watchEffect,
-  reactive,
-  onUnmounted,
-} from "@vue/composition-api";
+import { ref, watchEffect, onUnmounted } from "@vue/composition-api";
 import store from "@/store";
-// import mouStoreModule from "./mouStoreModule";
+import labRoomStoreModule from "./labRoomStoreModule";
 
 import { useToast } from "vue-toastification/composition";
 import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
+import Swal from "sweetalert2";
 import { getUserData } from "@/auth/utils";
-import { ValidationProvider, ValidationObserver } from "vee-validate";
+import router from "../../router";
 
 export default {
   filters: {
@@ -53,7 +52,6 @@ export default {
     BCard,
     BRow,
     BCol,
-    BFormInput,
     BButton,
     BLink,
     BDropdown,
@@ -62,7 +60,6 @@ export default {
     BSpinner,
     BOverlay,
     vSelect,
-    BFormGroup,
     flatPickr,
     BPagination,
     BCardText,
@@ -70,9 +67,13 @@ export default {
     BImg,
     ValidationProvider,
     ValidationObserver,
+    BFormGroup,
+    BFormInput,
     BFormTextarea,
     BForm,
     BFormFile,
+    BInputGroup,
+    BInputGroupPrepend,
   },
   data() {
     return {
@@ -88,6 +89,16 @@ export default {
     };
   },
   setup() {
+
+    const LAB_ROOM_VIEW_APP_STORE_MODULE_NAME = "lab-room-view";
+
+    // Register module
+    if (!store.hasModule(LAB_ROOM_VIEW_APP_STORE_MODULE_NAME))
+      store.registerModule(
+        LAB_ROOM_VIEW_APP_STORE_MODULE_NAME,
+        labRoomStoreModule
+      );
+
     onUnmounted(() => {});
 
     const toast = useToast();
@@ -102,10 +113,37 @@ export default {
         },
       });
     };
+    const labRoomItem = ref({});
+
+    const items = ref([]);
+    const item = ref({
+      id: null,
+      name: "",
+      lab_room_id: null,
+      equipment_file: null,
+      equipment_file_old: null,
+      equipment_vdo_file: null,
+      equipment_vdo_file_old: null,
+      detail: null,
+      level: null,
+      is_publish: 1,
+    });
 
     const isAdmin = ref(true);
     const isModal = ref(false);
     const isSubmit = ref(false);
+    const isOverLay = ref(false);
+    const simpleRules = ref();
+    const perPage = ref({ title: "60", code: 60 });
+    const currentPage = ref(1);
+    const totalPage = ref(1);
+    const totalItems = ref(0);
+    const orderBy = ref({
+      title: "Level",
+      code: "level",
+    });
+
+    const order = ref({ title: "ASC", code: "asc" });
 
     let baseUrl = "http://143.198.208.110:8111";
     if (
@@ -115,14 +153,103 @@ export default {
       baseUrl = "http://localhost:8111";
     }
 
-    const image1 = baseUrl + "/storage/lab-room/lab1.jpg";
-    const image2 = baseUrl + "/storage/lab-room/lab5.jpg";
-    const image3 = baseUrl + "/storage/lab-room/lab7.jpg";
-    const pdf1 = baseUrl + "/storage/excercise/lab.pdf";
+    const selectOptions = ref({
+      perPage: [{ title: "60", code: 60 }],
+      orderBy: [{ title: "Level", code: "level" }],
+      order: [
+        { title: "ASC", code: "asc" },
+        { title: "DESC", code: "desc" },
+      ],
+    });
+
+    const fetchLabRoomItems = () => {
+      isOverLay.value = true;
+      store
+        .dispatch("lab-room-view/fetchLabRoom", {
+          id: router.currentRoute.params.id,
+        })
+        .then((response) => {
+          labRoomItem.value = response.data.data;
+          fetchItems();
+          isOverLay.value = false;
+        })
+        .catch((error) => {
+          console.log(error);
+          toast({
+            component: ToastificationContent,
+            props: {
+              title: "Error fetching Equipment's list",
+              icon: "AlertTriangleIcon",
+              variant: "danger",
+            },
+          });
+          isOverLay.value = false;
+        });
+    };
+    fetchLabRoomItems();
+
+    const fetchItems = () => {
+      isOverLay.value = true;
+      store
+        .dispatch("lab-room-view/fetchEquipments", {
+          lab_room_id: labRoomItem.value.id,
+          perPage: perPage.value.code,
+          currentPage: currentPage.value == 0 ? undefined : currentPage.value,
+          orderBy: orderBy.value.code,
+          order: order.value.code,
+        })
+        .then((response) => {
+          items.value = response.data.data;
+          totalPage.value = response.data.totalPage;
+          totalItems.value = response.data.totalData;
+          isOverLay.value = false;
+        })
+        .catch((error) => {
+          console.log(error);
+          toast({
+            component: ToastificationContent,
+            props: {
+              title: "Error fetching Equipment's list",
+              icon: "AlertTriangleIcon",
+              variant: "danger",
+            },
+          });
+          isOverLay.value = false;
+        });
+    };
+
+    watchEffect(() => {
+      fetchItems();
+    });
 
     // const image = "http://localhost:8111/storage/organization/chart2.jpg";
 
     const handleAddClick = () => {
+      item.value.id = null;
+      item.value.name = "";
+      item.value.lab_room_id = labRoomItem.value.id;
+      item.value.equipment_file = null;
+      item.value.equipment_file_old = null;
+      item.value.equipment_vdo_file = null;
+      item.value.equipment_vdo_file_old = null;
+      item.value.detail = null;
+      item.value.level = null;
+      item.value.is_publish = 1;
+
+      isModal.value = true;
+    };
+
+    const handleEditClick = (it) => {
+      item.value.id = it.id;
+      item.value.name = it.name;
+      item.value.lab_room_id = labRoomItem.value.id;
+      item.value.equipment_file = null;
+      item.value.equipment_file_old = it.equipment_file;
+      item.value.equipment_vdo_file = null;
+      item.value.equipment_vdo_file_old = it.equipment_vdo_file;
+      item.value.detail = it.detail;
+      item.value.level = it.level;
+      item.value.is_publish = it.is_publish;
       isModal.value = true;
     };
 
@@ -130,23 +257,221 @@ export default {
       bvModalEvent.preventDefault();
       simpleRules.value.validate().then((success) => {
         if (success) {
-          // onSubmit();
-          isModal.value = false;
-          isSubmit.value = false;
+          onSubmit();
         }
       });
     };
 
+    const onSubmit = () => {
+      // Prevent modal from closing
+
+      isOverLay.value = true;
+      isSubmit.value = true;
+
+      let dataSend = {
+        name: item.value.name,
+        lab_room_id: item.value.lab_room_id,
+        equipment_file: item.value.equipment_file,
+        equipment_vdo_file: item.value.equipment_vdo_file,
+        detail: item.value.detail,
+        level: item.value.level,
+        is_publish: item.value.is_publish,
+      };
+
+      if (item.value.id == null) {
+        store
+          .dispatch("lab-room-view/addEquipment", dataSend)
+          .then(async (response) => {
+            if (response.data.message == "success") {
+              fetchItems();
+
+              isSubmit.value = false;
+              isModal.value = false;
+              isOverLay.value = false;
+
+              toast({
+                component: ToastificationContent,
+                props: {
+                  title: "Success : Added Equipment",
+                  icon: "CheckIcon",
+                  variant: "success",
+                },
+              });
+            } else {
+              isSubmit.value = false;
+              isOverLay.value = false;
+              errorToast(response.data.message);
+            }
+          })
+          .catch((error) => {
+            isSubmit.value = false;
+            isOverLay.value = false;
+
+            errorToast("Add Equipment Error");
+          });
+      } else {
+        // Update
+        dataSend["id"] = item.value.id;
+
+        store
+          .dispatch("lab-room-view/editEquipment", dataSend)
+          .then(async (response) => {
+            if (response.data.message == "success") {
+              fetchItems();
+
+              isSubmit.value = false;
+              isModal.value = false;
+              isOverLay.value = false;
+
+              toast({
+                component: ToastificationContent,
+                props: {
+                  title: "Success : Updated Equipment",
+                  icon: "CheckIcon",
+                  variant: "success",
+                },
+              });
+            } else {
+              isSubmit.value = false;
+              isModal.value = false;
+              isOverLay.value = false;
+              errorToast(response.data.message);
+            }
+          })
+          .catch(() => {
+            isSubmit.value = false;
+            isOverLay.value = false;
+            errorToast("Update Equipment Error");
+          });
+      }
+    };
+
+    const onConfirmDelete = (id) => {
+      Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!",
+        customClass: {
+          confirmButton: "btn btn-primary",
+          cancelButton: "btn btn-outline-danger ml-1",
+        },
+        buttonsStyling: false,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          onDelete(id);
+          Swal.fire({
+            icon: "success",
+            title: "Deleted!",
+            text: "Your file has been deleted.",
+            customClass: {
+              confirmButton: "btn btn-success",
+            },
+          });
+        }
+      });
+    };
+
+    const onDelete = (id) => {
+      store
+        .dispatch("lab-room-view/deleteEquipment", { id: id })
+        .then((response) => {
+          if (response.data.message == "success") {
+            fetchItems();
+          } else {
+            console.log("error");
+          }
+        })
+        .catch((error) => {
+          let textErrors = "";
+          Object.values(error.response.data.errors).forEach((textError) => {
+            textErrors = textErrors + textError + "<br>";
+          });
+          errorToast(textErrors);
+        });
+    };
+
+    const handleTogglePublishClick = (id, is_publish) => {
+      is_publish = is_publish == 1 ? 0 : 1;
+      store
+        .dispatch("lab-room-view/editEquipment", {
+          id: id,
+          is_publish: is_publish,
+        })
+        .then((response) => {
+          if (response.data.message == "success") {
+            fetchItems();
+          } else {
+            console.log("error");
+          }
+        })
+        .catch((error) => {
+          let textErrors = "";
+          Object.values(error.response.data.errors).forEach((textError) => {
+            textErrors = textErrors + textError + "<br>";
+          });
+          errorToast(textErrors);
+        });
+    };
+
+    const handleLevelClick = (id, type) => {
+      store
+        .dispatch("lab-room-view/editLevelEquipment", {
+          id: id,
+          type: type,
+        })
+        .then((response) => {
+          if (response.data.message == "success") {
+            fetchItems();
+            toast({
+              component: ToastificationContent,
+              props: {
+                title: "Success : Updated Equipment",
+                icon: "CheckIcon",
+                variant: "success",
+              },
+            });
+          } else {
+            console.log("error");
+          }
+        })
+        .catch((error) => {
+          let textErrors = "";
+          Object.values(error.response.data.errors).forEach((textError) => {
+            textErrors = textErrors + textError + "<br>";
+          });
+          errorToast(textErrors);
+        });
+    };
+
+    const isVdoShow = ref(null);
+    const vdoFile = ref(null);
+
+    const handleModalVDOClick = (it) => {
+      isVdoShow.value = true;
+      vdoFile.value = it.equipment_vdo_file;
+    };
+
     return {
-      image1,
-      image2,
-      image3,
-      pdf1,
       isAdmin,
       isModal,
       isSubmit,
       handleAddClick,
+      handleEditClick,
+      handleTogglePublishClick,
+      handleLevelClick,
       validationForm,
+      items,
+      onConfirmDelete,
+      item,
+      labRoomItem,
+      simpleRules,
+      isVdoShow,
+      vdoFile,
+      handleModalVDOClick,
     };
   },
 };
@@ -173,6 +498,12 @@ export default {
   padding-right: 0px;
   padding-left: 0px;
   padding-top: 3px;
+}
+
+.hr-custom {
+  width: 50%;
+  border-width: 0.1em;
+  border-color: rgba(2, 155, 249, 0.5);
 }
 </style>
 
@@ -210,15 +541,24 @@ export default {
                 <validation-provider
                   name="equipment_file"
                   #default="{ errors }"
-                  rules="required"
                 >
-                  <b-form-file
-                    id="equipment_file"
-                    placeholder="Choose a file or drop it here..."
-                    drop-placeholder="Drop file here..."
-                  />
-                  <!-- v-model="item.lab_room_file" -->
-
+                  <b-input-group>
+                    <b-input-group-prepend>
+                      <b-button
+                        variant="outline-warning"
+                        target="_blank"
+                        :href="item.equipment_file_old"
+                      >
+                        <feather-icon icon="FileTextIcon" /> ดูไฟล์เดิม
+                      </b-button>
+                    </b-input-group-prepend>
+                    <b-form-file
+                      id="equipment_file"
+                      v-model="item.equipment_file"
+                      placeholder="Choose a new file or drop it here..."
+                      drop-placeholder="Drop file here..."
+                    />
+                  </b-input-group>
                   <small class="text-danger">{{ errors[0] }}</small>
                 </validation-provider>
               </b-form-group>
@@ -229,13 +569,10 @@ export default {
                 label-for="name"
                 class="col-md"
               >
-                <validation-provider
-                  #default="{ errors }"
-                  name="name"
-                  rules="required"
-                >
+                <validation-provider #default="{ errors }" name="name">
                   <b-form-input
                     id="name"
+                    v-model="item.name"
                     placeholder=""
                     :state="errors.length > 0 ? false : null"
                   />
@@ -247,12 +584,13 @@ export default {
             <div class="row">
               <b-form-group
                 label="Description"
-                label-for="description"
+                label-for="detail"
                 class="col-md"
               >
                 <validation-provider #default="{ errors }" name="description">
                   <b-form-textarea
-                    id="descriptions"
+                    id="description"
+                    v-model="item.detail"
                     placeholder=""
                     :state="errors.length > 0 ? false : null"
                   />
@@ -262,22 +600,33 @@ export default {
               </b-form-group>
             </div>
             <div class="row">
+              <!--  -->
               <b-form-group
                 label="Video File"
-                label-for="equipment_video_file"
+                label-for="equipment_vdo_file"
                 class="col-md"
               >
                 <validation-provider
-                  name="equipment_video_file"
+                  name="equipment_vdo_file"
                   #default="{ errors }"
                 >
-                  <b-form-file
-                    id="equipment_video_file"
-                    placeholder="Choose a file or drop it here..."
-                    drop-placeholder="Drop file here..."
-                  />
-                  <!-- v-model="item.lab_room_file" -->
-
+                  <b-input-group>
+                    <b-input-group-prepend>
+                      <b-button
+                        variant="outline-warning"
+                        target="_blank"
+                        :href="item.equipment_vdo_file_old"
+                      >
+                        <feather-icon icon="FileTextIcon" /> ดูไฟล์เดิม
+                      </b-button>
+                    </b-input-group-prepend>
+                    <b-form-file
+                      id="equipment_vdo_file"
+                      v-model="item.equipment_vdo_file"
+                      placeholder="Choose a new file or drop it here..."
+                      drop-placeholder="Drop file here..."
+                    />
+                  </b-input-group>
                   <small class="text-danger">{{ errors[0] }}</small>
                 </validation-provider>
               </b-form-group>
@@ -294,46 +643,24 @@ export default {
       <div class="row">
         <div class="col-md-6 mt-1 mb-2">
           <b-img
-            :src="image1"
+            :src="labRoomItem.lab_room_file"
             class="rounded float-right img-fluid"
             style="width: 600px; height: 400px"
           />
         </div>
 
         <div class="col-md-6 mt-1 mb-2">
-          <h3>ห้องปฏิบัติการระบบขับเคลื่อนสมัยใหม่ (302)</h3>
+          <h3>{{ labRoomItem.name }}</h3>
           <div class="text-justify">
-            Contrary to popular belief, Lorem Ipsum is not simply random text.
-            It has roots in a piece of classical Latin literature from 45 BC,
-            making it over 2000 years old. Richard McClintock, a Latin professor
-            at Hampden-Sydney College in Virginia, looked up one of the more
-            obscure Latin words, consectetur, from a Lorem Ipsum passage, and
-            going through the cites of the word in classical literature,
-            discovered the undoubtable source. Lorem Ipsum comes from sections
-            1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes
-            of Good and Evil) by Cicero, written in 45 BC. This book is a
-            treatise on the theory of ethics, very popular during the
-            Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit
-            amet..", comes from a line in section 1.10.32.The standard chunk of
-            Lorem Ipsum used since the 1500s is reproduced below for those
-            interested. Sections 1.10.32 and 1.10.33 from "de Finibus Bonorum et
-            Malorum" by Cicero are also reproduced in their exact original form,
-            accompanied by English versions from the 1914 translation by H.
-            Rackham.
+            {{ labRoomItem.detail }}
           </div>
         </div>
 
         <div class="col-md-12 mt-1 mb-2">
-          <hr
-            style="
-              width: 50%;
-              border-width: 0.1em;
-              border-color: rgba(2, 155, 249, 0.5);
-            "
-          />
+          <hr class="hr-custom" />
         </div>
 
-        <div>
+        <div class="col-md-12">
           <b-button
             v-if="isAdmin"
             variant="primary"
@@ -343,238 +670,63 @@ export default {
           </b-button>
           <h3 class="mb-2">Equipment in Room</h3>
           <div class="row">
-            <div class="col-md-3">
+            <div class="col-md-3" v-for="it in items">
               <b-card
-                :img-src="image2"
+                :class="
+                  it.is_publish == 1
+                    ? 'position-static'
+                    : 'position-static bg-gradient-secondary'
+                "
+                :img-src="it.equipment_file"
                 img-top
-                img-alt="card img"
-                title="Card title that wraps to a new line"
-                class="position-static"
+                :img-alt="it.name"
+                :title="it.name"
               >
                 <!--  -->
-                <span style="position: absolute; top: 8px; right: 18px">
+                <span
+                  style="position: absolute; top: 8px; right: 18px"
+                  v-if="isAdmin"
+                >
                   <b-button
-                    v-if="isAdmin"
                     class="btn btn-sm rounded-circle btn-action-custom"
                     variant="info"
+                    @click="handleLevelClick(it.id, 'DC')"
                     ><feather-icon icon="ArrowLeftIcon"
                   /></b-button>
                   <b-button
-                    v-if="isAdmin"
                     class="btn btn-sm rounded-circle btn-action-custom"
                     variant="info"
+                    @click="handleLevelClick(it.id, 'IC')"
                     ><feather-icon icon="ArrowRightIcon"
                   /></b-button>
                   <b-button
-                    v-if="isAdmin"
                     class="btn btn-sm rounded-circle btn-action-custom"
                     variant="success"
+                    @click="handleTogglePublishClick(it.id, it.is_publish)"
                     ><feather-icon icon="CheckIcon"
                   /></b-button>
                   <b-button
-                    v-if="isAdmin"
                     class="btn btn-sm rounded-circle btn-action-custom"
                     variant="warning"
-                    @click="handleAddClick()"
+                    @click="handleEditClick(it)"
                     ><feather-icon icon="EditIcon"
                   /></b-button>
                   <b-button
-                    v-if="isAdmin"
                     class="btn btn-sm rounded-circle btn-action-custom"
                     variant="danger"
+                    @click="onConfirmDelete(it.id)"
                     ><feather-icon icon="TrashIcon"
                   /></b-button>
                 </span>
                 <!--  -->
                 <b-card-text>
-                  This is a longer card with supporting text below as a natural
-                  lead-in to additional content. This content is a little bit
-                  longer.
-
+                  {{ it.detail }}
+                  <br />
                   <b-button
                     class="btn btn-outline-warning mt-2"
                     v-b-modal.myModal
                     variant="outline-warning"
-                  >
-                    <feather-icon icon="YoutubeIcon" size="12" />
-                    แนะนำการใช้เครื่องมือ
-                  </b-button>
-                </b-card-text>
-              </b-card>
-            </div>
-
-            <div class="col-md-3">
-              <b-card
-                :img-src="image2"
-                img-top
-                img-alt="card img"
-                title="Card title that wraps to a new line"
-                class="position-static"
-              >
-                <!--  -->
-                <span style="position: absolute; top: 8px; right: 18px">
-                  <b-button
-                    v-if="isAdmin"
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="info"
-                    ><feather-icon icon="ArrowLeftIcon"
-                  /></b-button>
-                  <b-button
-                    v-if="isAdmin"
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="info"
-                    ><feather-icon icon="ArrowRightIcon"
-                  /></b-button>
-                  <b-button
-                    v-if="isAdmin"
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="success"
-                    ><feather-icon icon="CheckIcon"
-                  /></b-button>
-                  <b-button
-                    v-if="isAdmin"
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="warning"
-                    @click="handleAddClick()"
-                    ><feather-icon icon="EditIcon"
-                  /></b-button>
-                  <b-button
-                    v-if="isAdmin"
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="danger"
-                    ><feather-icon icon="TrashIcon"
-                  /></b-button>
-                </span>
-                <!--  -->
-                <b-card-text>
-                  This is a longer card with supporting text below as a natural
-                  lead-in to additional content. This content is a little bit
-                  longer.
-
-                  <b-button
-                    class="btn btn-outline-warning mt-2"
-                    v-b-modal.myModal
-                    variant="outline-warning"
-                  >
-                    <feather-icon icon="YoutubeIcon" size="12" />
-                    แนะนำการใช้เครื่องมือ
-                  </b-button>
-                </b-card-text>
-              </b-card>
-            </div>
-
-            <div class="col-md-3">
-              <b-card
-                :img-src="image3"
-                img-top
-                img-alt="card img"
-                title="Card title that wraps to a new line"
-                class="position-static"
-              >
-                <!--  -->
-                <span style="position: absolute; top: 8px; right: 18px">
-                  <b-button
-                    v-if="isAdmin"
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="info"
-                    ><feather-icon icon="ArrowLeftIcon"
-                  /></b-button>
-                  <b-button
-                    v-if="isAdmin"
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="info"
-                    ><feather-icon icon="ArrowRightIcon"
-                  /></b-button>
-                  <b-button
-                    v-if="isAdmin"
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="success"
-                    ><feather-icon icon="CheckIcon"
-                  /></b-button>
-                  <b-button
-                    v-if="isAdmin"
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="warning"
-                    @click="handleAddClick()"
-                    ><feather-icon icon="EditIcon"
-                  /></b-button>
-                  <b-button
-                    v-if="isAdmin"
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="danger"
-                    ><feather-icon icon="TrashIcon"
-                  /></b-button>
-                </span>
-                <!--  -->
-                <b-card-text>
-                  This is a longer card with supporting text below as a natural
-                  lead-in to additional content. This content is a little bit
-                  longer.
-
-                  <b-button
-                    class="btn btn-outline-warning mt-2"
-                    v-b-modal.myModal
-                    variant="outline-warning"
-                  >
-                    <feather-icon icon="YoutubeIcon" size="12" />
-                    แนะนำการใช้เครื่องมือ
-                  </b-button>
-                </b-card-text>
-              </b-card>
-            </div>
-
-            <div class="col-md-3">
-              <b-card
-                :img-src="image1"
-                img-top
-                img-alt="card img"
-                title="Card title that wraps to a new line"
-                class="position-static"
-              >
-                <!--  -->
-                <span style="position: absolute; top: 8px; right: 18px">
-                  <b-button
-                    v-if="isAdmin"
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="info"
-                    ><feather-icon icon="ArrowLeftIcon"
-                  /></b-button>
-                  <b-button
-                    v-if="isAdmin"
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="info"
-                    ><feather-icon icon="ArrowRightIcon"
-                  /></b-button>
-                  <b-button
-                    v-if="isAdmin"
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="success"
-                    ><feather-icon icon="CheckIcon"
-                  /></b-button>
-                  <b-button
-                    v-if="isAdmin"
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="warning"
-                    @click="handleAddClick()"
-                    ><feather-icon icon="EditIcon"
-                  /></b-button>
-                  <b-button
-                    v-if="isAdmin"
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="danger"
-                    ><feather-icon icon="TrashIcon"
-                  /></b-button>
-                </span>
-                <!--  -->
-                <b-card-text>
-                  This is a longer card with supporting text below as a natural
-                  lead-in to additional content. This content is a little bit
-                  longer.
-
-                  <b-button
-                    class="btn btn-outline-warning mt-2"
-                    v-b-modal.myModal
-                    variant="outline-warning"
+                    @click="handleModalVDOClick(it)"
                   >
                     <feather-icon icon="YoutubeIcon" size="12" />
                     แนะนำการใช้เครื่องมือ
@@ -586,212 +738,15 @@ export default {
         </div>
 
         <div class="col-md-12 mt-1 mb-2">
-          <hr
-            style="
-              width: 50%;
-              border-width: 0.1em;
-              border-color: rgba(2, 155, 249, 0.5);
-            "
-          />
+          <hr class="hr-custom" />
         </div>
-
-        <!--  -->
-        <!-- <div>
-          <h3>หัวข้อทดลอง</h3>
-          <div class="row">
-            <div class="col-md-3">
-              <b-card
-                :img-src="image3"
-                img-top
-                img-alt="card img"
-                title="Card title that wraps to a new line"
-                class="position-static"
-              >
-                <b-card-text>
-                  This is a longer card with supporting text below as a natural
-                  lead-in to additional content. This content is a little bit
-                  longer.
-
-                  <b-button
-                    class="mt-2"
-                    variant="outline-primary"
-                    style="width: 100%"
-                    :href="pdf1"
-                    target="_blank"
-                  >
-                    <feather-icon icon="FileIcon" size="12" />
-                    ใบงาน
-                  </b-button>
-
-                  <b-button
-                    class="mt-2"
-                    v-b-modal.myModal
-                    variant="outline-warning"
-                    style="width: 100%"
-                  >
-                    <feather-icon icon="YoutubeIcon" size="12" />
-                    คลิปแนะนำการทดลอง
-                  </b-button>
-
-                  <b-button
-                    class="mt-2"
-                    v-b-modal.myModal
-                    variant="outline-success"
-                    style="width: 100%"
-                  >
-                    <feather-icon icon="YoutubeIcon" size="12" />
-                    คลิปทดลอง
-                  </b-button>
-                </b-card-text>
-              </b-card>
-            </div>
-            <div class="col-md-3">
-              <b-card
-                :img-src="image3"
-                img-top
-                img-alt="card img"
-                title="Card title that wraps to a new line"
-                class="position-static"
-              >
-                <b-card-text>
-                  This is a longer card with supporting text below as a natural
-                  lead-in to additional content. This content is a little bit
-                  longer.
-
-                  <b-button
-                    class="mt-2"
-                    variant="outline-primary"
-                    style="width: 100%"
-                    :href="pdf1"
-                    target="_blank"
-                  >
-                    <feather-icon icon="FileIcon" size="12" />
-                    ใบงาน
-                  </b-button>
-
-                  <b-button
-                    class="mt-2"
-                    v-b-modal.myModal
-                    variant="outline-warning"
-                    style="width: 100%"
-                  >
-                    <feather-icon icon="YoutubeIcon" size="12" />
-                    คลิปแนะนำการทดลอง
-                  </b-button>
-
-                  <b-button
-                    class="mt-2"
-                    v-b-modal.myModal
-                    variant="outline-success"
-                    style="width: 100%"
-                  >
-                    <feather-icon icon="YoutubeIcon" size="12" />
-                    คลิปทดลอง
-                  </b-button>
-                </b-card-text>
-              </b-card>
-            </div>
-            <div class="col-md-3">
-              <b-card
-                :img-src="image1"
-                img-top
-                img-alt="card img"
-                title="Card title that wraps to a new line"
-                class="position-static"
-              >
-                <b-card-text>
-                  This is a longer card with supporting text below as a natural
-                  lead-in to additional content. This content is a little bit
-                  longer.
-
-                  <b-button
-                    class="mt-2"
-                    variant="outline-primary"
-                    style="width: 100%"
-                    :href="pdf1"
-                    target="_blank"
-                  >
-                    <feather-icon icon="FileIcon" size="12" />
-                    ใบงาน
-                  </b-button>
-
-                  <b-button
-                    class="mt-2"
-                    v-b-modal.myModal
-                    variant="outline-warning"
-                    style="width: 100%"
-                  >
-                    <feather-icon icon="YoutubeIcon" size="12" />
-                    คลิปแนะนำการทดลอง
-                  </b-button>
-
-                  <b-button
-                    class="mt-2"
-                    v-b-modal.myModal
-                    variant="outline-success"
-                    style="width: 100%"
-                  >
-                    <feather-icon icon="YoutubeIcon" size="12" />
-                    คลิปทดลอง
-                  </b-button>
-                </b-card-text>
-              </b-card>
-            </div>
-
-            <div class="col-md-3">
-              <b-card
-                :img-src="image1"
-                img-top
-                img-alt="card img"
-                title="Card title that wraps to a new line"
-                class="position-static"
-              >
-                <b-card-text>
-                  This is a longer card with supporting text below as a natural
-                  lead-in to additional content. This content is a little bit
-                  longer.
-
-                  <b-button
-                    class="mt-2"
-                    variant="outline-primary"
-                    style="width: 100%"
-                    :href="pdf1"
-                    target="_blank"
-                  >
-                    <feather-icon icon="FileIcon" size="12" />
-                    ใบงาน
-                  </b-button>
-
-                  <b-button
-                    class="mt-2"
-                    v-b-modal.myModal
-                    variant="outline-warning"
-                    style="width: 100%"
-                  >
-                    <feather-icon icon="YoutubeIcon" size="12" />
-                    คลิปแนะนำการทดลอง
-                  </b-button>
-
-                  <b-button
-                    class="mt-2"
-                    v-b-modal.myModal
-                    variant="outline-success"
-                    style="width: 100%"
-                  >
-                    <feather-icon icon="YoutubeIcon" size="12" />
-                    คลิปทดลอง
-                  </b-button>
-                </b-card-text>
-              </b-card>
-            </div>
-          </div>
-        </div> -->
       </div>
     </div>
 
     <!--  -->
     <b-modal
       id="myModal"
+      v-if="isVdoShow"
       class="fade"
       hide-footer
       centered
@@ -802,7 +757,7 @@ export default {
         <iframe
           width="100%"
           height="800"
-          src="https://www.youtube.com/embed/n_T4tPHtqaw"
+          :src="vdoFile"
           title="YouTube video player"
           frameborder="0"
           allow="autoplay"

@@ -3,7 +3,6 @@ import {
   BCard,
   BRow,
   BCol,
-  BFormInput,
   BButton,
   BLink,
   BDropdown,
@@ -11,37 +10,36 @@ import {
   BPagination,
   BSpinner,
   BOverlay,
-  BFormGroup,
   BCardText,
   BImg,
-  BModal,
-  BFormFile,
+  // Form
   BForm,
+  BFormGroup,
+  BFormFile,
+  BFormInput,
   BFormTextarea,
+  BInputGroup,
+  BInputGroupPrepend,
 } from "bootstrap-vue";
 import vSelect from "vue-select";
 import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import { Thai } from "flatpickr/dist/l10n/th.js";
-
 import { ValidationProvider, ValidationObserver } from "vee-validate";
+import { required } from "@validations";
+
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
 dayjs.extend(buddhistEra);
 
-import {
-  ref,
-  watch,
-  watchEffect,
-  reactive,
-  onUnmounted,
-} from "@vue/composition-api";
+import { ref, watchEffect, onUnmounted } from "@vue/composition-api";
 import store from "@/store";
-// import mouStoreModule from "./mouStoreModule";
+import memberStoreModule from "./memberStoreModule";
 
 import { useToast } from "vue-toastification/composition";
 import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
+import Swal from "sweetalert2";
 import { getUserData } from "@/auth/utils";
 
 export default {
@@ -54,7 +52,6 @@ export default {
     BCard,
     BRow,
     BCol,
-    BFormInput,
     BButton,
     BLink,
     BDropdown,
@@ -63,18 +60,21 @@ export default {
     BSpinner,
     BOverlay,
     vSelect,
-    BFormGroup,
     flatPickr,
     BPagination,
     BCardText,
     dayjs,
     BImg,
-    BModal,
+    //
     ValidationProvider,
     ValidationObserver,
-    BFormFile,
-    BForm,
+    BFormGroup,
+    BFormInput,
     BFormTextarea,
+    BForm,
+    BFormFile,
+    BInputGroup,
+    BInputGroupPrepend,
   },
   data() {
     return {
@@ -90,6 +90,12 @@ export default {
     };
   },
   setup() {
+    const MEMBER_APP_STORE_MODULE_NAME = "member-list";
+
+    // Register module
+    if (!store.hasModule(MEMBER_APP_STORE_MODULE_NAME))
+      store.registerModule(MEMBER_APP_STORE_MODULE_NAME, memberStoreModule);
+
     onUnmounted(() => {});
 
     const toast = useToast();
@@ -105,6 +111,37 @@ export default {
       });
     };
 
+    //
+    const items = ref([]);
+    const item = ref({
+      id: null,
+      prefix: "",
+      name: "",
+      surname: "",
+      member_file: null,
+      member_file_old: null,
+      position: "",
+      degree: "",
+      level: null,
+      is_publish: 1,
+    });
+
+    const isAdmin = ref(true);
+    const isModal = ref(false);
+    const isSubmit = ref(false);
+    const isOverLay = ref(false);
+    const simpleRules = ref();
+    const perPage = ref({ title: "60", code: 60 });
+    const currentPage = ref(1);
+    const totalPage = ref(1);
+    const totalItems = ref(0);
+    const orderBy = ref({
+      title: "Level",
+      code: "level",
+    });
+
+    const order = ref({ title: "ASC", code: "asc" });
+
     let baseUrl = "http://143.198.208.110:8111";
     if (
       location.hostname === "localhost" ||
@@ -113,26 +150,77 @@ export default {
       baseUrl = "http://localhost:8111";
     }
 
-    const image1 = baseUrl + "/storage/avatars/1.png";
-    const image2 = baseUrl + "/storage/avatars/2.png";
-    const image3 = baseUrl + "/storage/avatars/3.png";
-    const image4 = baseUrl + "/storage/avatars/4.png";
-    const image5 = baseUrl + "/storage/avatars/5.png";
-    const image6 = baseUrl + "/storage/avatars/6.png";
-    const image7 = baseUrl + "/storage/avatars/7.png";
-    const image8 = baseUrl + "/storage/avatars/8.png";
-    const image9 = baseUrl + "/storage/avatars/9.png";
-    const image10 = baseUrl + "/storage/avatars/10.png";
-    const image11 = baseUrl + "/storage/avatars/11.png";
-    const image12 = baseUrl + "/storage/avatars/12.png";
+    const selectOptions = ref({
+      perPage: [{ title: "60", code: 60 }],
+      orderBy: [{ title: "Level", code: "level" }],
+      order: [
+        { title: "ASC", code: "asc" },
+        { title: "DESC", code: "desc" },
+      ],
+    });
 
-    const isAdmin = ref(true);
-    const isModal = ref(false);
-    const isSubmit = ref(false);
+    const fetchItems = () => {
+      isOverLay.value = true;
+      store
+        .dispatch("member-list/fetchMembers", {
+          perPage: perPage.value.code,
+          currentPage: currentPage.value == 0 ? undefined : currentPage.value,
+          orderBy: orderBy.value.code,
+          order: order.value.code,
+        })
+        .then((response) => {
+          items.value = response.data.data;
+          totalPage.value = response.data.totalPage;
+          totalItems.value = response.data.totalData;
+          isOverLay.value = false;
+        })
+        .catch((error) => {
+          console.log(error);
+          toast({
+            component: ToastificationContent,
+            props: {
+              title: "Error fetching Member's list",
+              icon: "AlertTriangleIcon",
+              variant: "danger",
+            },
+          });
+          isOverLay.value = false;
+        });
+    };
+    fetchItems();
+
+    watchEffect(() => {
+      fetchItems();
+    });
 
     // const image = "http://localhost:8111/storage/organization/chart2.jpg";
 
     const handleAddClick = () => {
+      item.value.id = null;
+      item.value.prefix = "";
+      item.value.name = "";
+      item.value.surname = "";
+      item.value.member_file = null;
+      item.value.member_file_old = null;
+      item.value.position = "";
+      item.value.degree = "";
+      item.value.level = null;
+      item.value.is_publish = 1;
+
+      isModal.value = true;
+    };
+
+    const handleEditClick = (it) => {
+      item.value.id = it.id;
+      item.value.prefix = it.prefix;
+      item.value.name = it.name;
+      item.value.surname = it.surname;
+      item.value.member_file = null;
+      item.value.member_file_old = it.member_file;
+      item.value.position = it.position;
+      item.value.degree = it.degree;
+      item.value.level = it.level;
+      item.value.is_publish = it.is_publish;
       isModal.value = true;
     };
 
@@ -140,31 +228,212 @@ export default {
       bvModalEvent.preventDefault();
       simpleRules.value.validate().then((success) => {
         if (success) {
-          // onSubmit();
-          isModal.value = false;
-          isSubmit.value = false;
+          onSubmit();
         }
       });
     };
 
+    const onSubmit = () => {
+      // Prevent modal from closing
+
+      isOverLay.value = true;
+      isSubmit.value = true;
+
+      let dataSend = {
+        prefix: item.value.prefix,
+        name: item.value.name,
+        surname: item.value.surname,
+        member_file: item.value.member_file,
+        position: item.value.position,
+        degree: item.value.degree,
+        level: item.value.level,
+        is_publish: item.value.is_publish,
+      };
+
+      if (item.value.id == null) {
+        store
+          .dispatch("member-list/addMember", dataSend)
+          .then(async (response) => {
+            if (response.data.message == "success") {
+              fetchItems();
+
+              isSubmit.value = false;
+              isModal.value = false;
+              isOverLay.value = false;
+
+              toast({
+                component: ToastificationContent,
+                props: {
+                  title: "Success : Added Member",
+                  icon: "CheckIcon",
+                  variant: "success",
+                },
+              });
+            } else {
+              isSubmit.value = false;
+              isOverLay.value = false;
+              errorToast(response.data.message);
+            }
+          })
+          .catch((error) => {
+            isSubmit.value = false;
+            isOverLay.value = false;
+
+            errorToast("Add Member Error");
+          });
+      } else {
+        // Update
+        dataSend["id"] = item.value.id;
+
+        store
+          .dispatch("member-list/editMember", dataSend)
+          .then(async (response) => {
+            if (response.data.message == "success") {
+              fetchItems();
+
+              isSubmit.value = false;
+              isModal.value = false;
+              isOverLay.value = false;
+
+              toast({
+                component: ToastificationContent,
+                props: {
+                  title: "Success : Updated Member",
+                  icon: "CheckIcon",
+                  variant: "success",
+                },
+              });
+            } else {
+              isSubmit.value = false;
+              isModal.value = false;
+              isOverLay.value = false;
+              errorToast(response.data.message);
+            }
+          })
+          .catch(() => {
+            isSubmit.value = false;
+            isOverLay.value = false;
+            errorToast("Update Member Error");
+          });
+      }
+    };
+
+    const onConfirmDelete = (id) => {
+      Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!",
+        customClass: {
+          confirmButton: "btn btn-primary",
+          cancelButton: "btn btn-outline-danger ml-1",
+        },
+        buttonsStyling: false,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          onDelete(id);
+          Swal.fire({
+            icon: "success",
+            title: "Deleted!",
+            text: "Your file has been deleted.",
+            customClass: {
+              confirmButton: "btn btn-success",
+            },
+          });
+        }
+      });
+    };
+
+    const onDelete = (id) => {
+      store
+        .dispatch("member-list/deleteMember", { id: id })
+        .then((response) => {
+          if (response.data.message == "success") {
+            fetchItems();
+          } else {
+            console.log("error");
+          }
+        })
+        .catch((error) => {
+          let textErrors = "";
+          Object.values(error.response.data.errors).forEach((textError) => {
+            textErrors = textErrors + textError + "<br>";
+          });
+          errorToast(textErrors);
+        });
+    };
+
+    const handleTogglePublishClick = (id, is_publish) => {
+      is_publish = is_publish == 1 ? 0 : 1;
+      store
+        .dispatch("member-list/editMember", {
+          id: id,
+          is_publish: is_publish,
+        })
+        .then((response) => {
+          if (response.data.message == "success") {
+            fetchItems();
+          } else {
+            console.log("error");
+          }
+        })
+        .catch((error) => {
+          let textErrors = "";
+          Object.values(error.response.data.errors).forEach((textError) => {
+            textErrors = textErrors + textError + "<br>";
+          });
+          errorToast(textErrors);
+        });
+    };
+
+    const handleLevelClick = (id, type) => {
+      store
+        .dispatch("member-list/editLevelMember", {
+          id: id,
+          type: type,
+        })
+        .then((response) => {
+          if (response.data.message == "success") {
+            fetchItems();
+            toast({
+              component: ToastificationContent,
+              props: {
+                title: "Success : Updated Member",
+                icon: "CheckIcon",
+                variant: "success",
+              },
+            });
+          } else {
+            console.log("error");
+          }
+        })
+        .catch((error) => {
+          let textErrors = "";
+          Object.values(error.response.data.errors).forEach((textError) => {
+            textErrors = textErrors + textError + "<br>";
+          });
+          errorToast(textErrors);
+        });
+    };
+
     return {
-      image1,
-      image2,
-      image3,
-      image4,
-      image5,
-      image6,
-      image7,
-      image8,
-      image9,
-      image10,
-      image11,
-      image12,
       isAdmin,
       isModal,
       isSubmit,
       handleAddClick,
+      handleEditClick,
+      handleTogglePublishClick,
+      handleLevelClick,
       validationForm,
+      // onChangePage,
+      // displayDateInput,
+      items,
+      onConfirmDelete,
+      item,
+      simpleRules,
     };
   },
 };
@@ -186,9 +455,17 @@ export default {
 }
 
 .btn-action-custom {
-  width: 30px;
+  width: 20px;
+  height: 20px;
   padding-right: 0px;
   padding-left: 0px;
+  padding-top: 3px;
+}
+
+.hr-custom {
+  width: 80%;
+  border-width: 0.1em;
+  border-color: rgba(2, 155, 249, 0.5);
 }
 </style>
 
@@ -219,36 +496,63 @@ export default {
           <b-form>
             <div class="row">
               <b-form-group
-                label="Photo"
-                label-for="lab_room_file"
+                label="Member Photo"
+                label-for="member_file"
                 class="col-md"
               >
-                <validation-provider
-                  name="lab_room_file"
-                  #default="{ errors }"
-                  rules="required"
-                >
-                  <b-form-file
-                    id="lab_room_file"
-                    placeholder="Choose a file or drop it here..."
-                    drop-placeholder="Drop file here..."
-                  />
-                  <!-- v-model="item.lab_room_file" -->
-
+                <validation-provider name="member_file" #default="{ errors }">
+                  <b-input-group>
+                    <b-input-group-prepend>
+                      <b-button
+                        variant="outline-warning"
+                        target="_blank"
+                        :href="item.member_file_old"
+                      >
+                        <feather-icon icon="FileTextIcon" /> ดูไฟล์เดิม
+                      </b-button>
+                    </b-input-group-prepend>
+                    <b-form-file
+                      id="member_file"
+                      v-model="item.member_file"
+                      placeholder="Choose a new file or drop it here..."
+                      drop-placeholder="Drop file here..."
+                    />
+                  </b-input-group>
                   <small class="text-danger">{{ errors[0] }}</small>
                 </validation-provider>
               </b-form-group>
             </div>
+
             <div class="row">
-              <b-form-group label="Full Name" label-for="name" class="col-md">
+              <b-form-group label="Prefix" label-for="prefix" class="col-md">
                 <validation-provider
                   #default="{ errors }"
-                  name="Full Name"
+                  name="Prefix"
+                  rules="required"
+                >
+                  <b-form-input
+                    id="prefix"
+                    placeholder=""
+                    v-model="item.prefix"
+                    :state="errors.length > 0 ? false : null"
+                  />
+                  <!-- v-model="item.name" -->
+                  <small class="text-danger">{{ errors[0] }}</small>
+                </validation-provider>
+              </b-form-group>
+            </div>
+
+            <div class="row">
+              <b-form-group label="Name" label-for="name" class="col-md">
+                <validation-provider
+                  #default="{ errors }"
+                  name="Name"
                   rules="required"
                 >
                   <b-form-input
                     id="name"
                     placeholder=""
+                    v-model="item.name"
                     :state="errors.length > 0 ? false : null"
                   />
                   <!-- v-model="item.name" -->
@@ -258,28 +562,53 @@ export default {
             </div>
 
             <div class="row">
-              <b-form-group label="Job" label-for="job" class="col-md">
-                <validation-provider #default="{ errors }" name="Job">
+              <b-form-group label="Surname" label-for="surname" class="col-md">
+                <validation-provider
+                  #default="{ errors }"
+                  name="Surname"
+                  rules="required"
+                >
                   <b-form-input
-                    id="job"
+                    id="surname"
                     placeholder=""
+                    v-model="item.surname"
                     :state="errors.length > 0 ? false : null"
                   />
-                  <!-- v-model="item.name" -->
+
                   <small class="text-danger">{{ errors[0] }}</small>
                 </validation-provider>
               </b-form-group>
             </div>
 
             <div class="row">
-              <b-form-group label="Email" label-for="email" class="col-md">
-                <validation-provider #default="{ errors }" name="Email">
+              <b-form-group
+                label="Position"
+                label-for="position"
+                class="col-md"
+              >
+                <validation-provider #default="{ errors }" name="Position">
                   <b-form-input
-                    id="email"
+                    id="position"
                     placeholder=""
+                    v-model="item.position"
                     :state="errors.length > 0 ? false : null"
                   />
-                  <!-- v-model="item.name" -->
+
+                  <small class="text-danger">{{ errors[0] }}</small>
+                </validation-provider>
+              </b-form-group>
+            </div>
+
+            <div class="row">
+              <b-form-group label="Degree" label-for="degree" class="col-md">
+                <validation-provider #default="{ errors }" name="Degree">
+                  <b-form-input
+                    id="degree"
+                    placeholder=""
+                    v-model="item.degree"
+                    :state="errors.length > 0 ? false : null"
+                  />
+
                   <small class="text-danger">{{ errors[0] }}</small>
                 </validation-provider>
               </b-form-group>
@@ -302,507 +631,57 @@ export default {
       </b-button>
       <h2 class="text-center">Member</h2>
 
-      <hr
-        style="
-          width: 80%;
-          border-width: 0.1em;
-          border-color: rgba(2, 155, 249, 0.5);
-        "
-      />
+      <hr class="hr-custom" />
       <div class="row">
-        <div class="col-md-3 mt-1 mb-2">
-          <div>
-            <b-img :src="image1" class="rounded" />
+        <div class="col-md-3 mt-1 mb-2" v-for="it in items">
+          <div
+            :class="it.is_publish == 1 ? '' : 'bg-gradient-secondary'"
+            v-if="it.is_publish == 1 || isAdmin"
+          >
+            <div class="text-center">
+              <b-img :src="it.member_file" class="rounded" />
+              <span
+                style="position: absolute; top: 12px; left: 50%;transform:translate(-50%, -50%);"
+                v-if="isAdmin"
+              >
+                <b-button
+                  class="btn btn-sm rounded-circle btn-action-custom"
+                  variant="info"
+                  @click="handleLevelClick(it.id, 'DC')"
+                  ><feather-icon icon="ArrowLeftIcon"
+                /></b-button>
+                <b-button
+                  class="btn btn-sm rounded-circle btn-action-custom"
+                  variant="info"
+                  @click="handleLevelClick(it.id, 'IC')"
+                  ><feather-icon icon="ArrowRightIcon"
+                /></b-button>
+                <b-button
+                  class="btn btn-sm rounded-circle btn-action-custom"
+                  variant="success"
+                  @click="handleTogglePublishClick(it.id, it.is_publish)"
+                  ><feather-icon icon="CheckIcon"
+                /></b-button>
+                <b-button
+                  class="btn btn-sm rounded-circle btn-action-custom"
+                  variant="warning"
+                  @click="handleEditClick(it)"
+                  ><feather-icon icon="EditIcon"
+                /></b-button>
+                <b-button
+                  class="btn btn-sm rounded-circle btn-action-custom"
+                  variant="danger"
+                  @click="onConfirmDelete(it.id)"
+                  ><feather-icon icon="TrashIcon"
+                /></b-button>
+              </span>
+            </div>
+            <div class="mt-1 font-weight-bold text-center">
+              {{ it.prefix + it.name + it.surname }}
+            </div>
+            <div>ตำแหน่ง: {{ it.position }}</div>
+            <div>ระดับ: {{ it.degree }}</div>
           </div>
-          <div v-if="isAdmin" class="mt-2">
-            <span>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowLeftIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowRightIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="success"
-                ><feather-icon icon="CheckIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="warning"
-                @click="handleAddClick()"
-                ><feather-icon icon="EditIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="danger"
-                ><feather-icon icon="TrashIcon"
-              /></b-button>
-            </span>
-          </div>
-          <div class="mt-1 font-weight-bold">นายอานนท์ รักจักร์</div>
-          <div>ตำแหน่ง: นักวิจัย</div>
-          <div>ระดับ: ชำนาญการ</div>
-        </div>
-        <div class="col-md-3 mt-1 mb-2">
-          <b-img :src="image2" class="rounded" />
-          <div v-if="isAdmin" class="mt-2">
-            <span>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowLeftIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowRightIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="success"
-                ><feather-icon icon="CheckIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="warning"
-                @click="handleAddClick()"
-                ><feather-icon icon="EditIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="danger"
-                ><feather-icon icon="TrashIcon"
-              /></b-button>
-            </span>
-          </div>
-          <div class="mt-1 font-weight-bold">นายอานนท์ รักจักร์</div>
-          <div>ตำแหน่ง: นักวิจัย</div>
-          <div>ระดับ: ชำนาญการ</div>
-        </div>
-        <div class="col-md-3 mt-1 mb-2">
-          <b-img :src="image3" class="rounded" />
-          <div v-if="isAdmin" class="mt-2">
-            <span>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowLeftIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowRightIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="success"
-                ><feather-icon icon="CheckIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="warning"
-                @click="handleAddClick()"
-                ><feather-icon icon="EditIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="danger"
-                ><feather-icon icon="TrashIcon"
-              /></b-button>
-            </span>
-          </div>
-          <div class="mt-1 font-weight-bold">นายอานนท์ รักจักร์</div>
-          <div>ตำแหน่ง: นักวิจัย</div>
-          <div>ระดับ: ชำนาญการ</div>
-        </div>
-        <div class="col-md-3 mt-1 mb-2">
-          <b-img :src="image4" class="rounded" />
-          <div v-if="isAdmin" class="mt-2">
-            <span>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowLeftIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowRightIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="success"
-                ><feather-icon icon="CheckIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="warning"
-                @click="handleAddClick()"
-                ><feather-icon icon="EditIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="danger"
-                ><feather-icon icon="TrashIcon"
-              /></b-button>
-            </span>
-          </div>
-          <div class="mt-1 font-weight-bold">นายอานนท์ รักจักร์</div>
-          <div>ตำแหน่ง: นักวิจัย</div>
-          <div>ระดับ: ชำนาญการ</div>
-        </div>
-        <div class="col-md-3 mt-1 mb-2">
-          <b-img :src="image5" class="rounded" />
-          <div v-if="isAdmin" class="mt-2">
-            <span>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowLeftIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowRightIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="success"
-                ><feather-icon icon="CheckIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="warning"
-                @click="handleAddClick()"
-                ><feather-icon icon="EditIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="danger"
-                ><feather-icon icon="TrashIcon"
-              /></b-button>
-            </span>
-          </div>
-          <div class="mt-1 font-weight-bold">นายอานนท์ รักจักร์</div>
-          <div>ตำแหน่ง: นักวิจัย</div>
-          <div>ระดับ: ชำนาญการ</div>
-        </div>
-        <div class="col-md-3 mt-1 mb-2">
-          <b-img :src="image6" class="rounded" />
-          <div v-if="isAdmin" class="mt-2">
-            <span>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowLeftIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowRightIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="success"
-                ><feather-icon icon="CheckIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="warning"
-                @click="handleAddClick()"
-                ><feather-icon icon="EditIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="danger"
-                ><feather-icon icon="TrashIcon"
-              /></b-button>
-            </span>
-          </div>
-          <div class="mt-1 font-weight-bold">นายอานนท์ รักจักร์</div>
-          <div>ตำแหน่ง: นักวิจัย</div>
-          <div>ระดับ: ชำนาญการ</div>
-        </div>
-        <div class="col-md-3 mt-1 mb-2">
-          <b-img :src="image7" class="rounded" />
-          <div v-if="isAdmin" class="mt-2">
-            <span>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowLeftIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowRightIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="success"
-                ><feather-icon icon="CheckIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="warning"
-                @click="handleAddClick()"
-                ><feather-icon icon="EditIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="danger"
-                ><feather-icon icon="TrashIcon"
-              /></b-button>
-            </span>
-          </div>
-          <div class="mt-1 font-weight-bold">นายอานนท์ รักจักร์</div>
-          <div>ตำแหน่ง: นักวิจัย</div>
-          <div>ระดับ: ชำนาญการ</div>
-        </div>
-        <div class="col-md-3 mt-1 mb-2">
-          <b-img :src="image8" class="rounded" />
-          <div v-if="isAdmin" class="mt-2">
-            <span>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowLeftIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowRightIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="success"
-                ><feather-icon icon="CheckIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="warning"
-                @click="handleAddClick()"
-                ><feather-icon icon="EditIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="danger"
-                ><feather-icon icon="TrashIcon"
-              /></b-button>
-            </span>
-          </div>
-          <div class="mt-1 font-weight-bold">นายอานนท์ รักจักร์</div>
-          <div>ตำแหน่ง: นักวิจัย</div>
-          <div>ระดับ: ชำนาญการ</div>
-        </div>
-        <div class="col-md-3 mt-1 mb-2">
-          <b-img :src="image9" class="rounded" />
-          <div v-if="isAdmin" class="mt-2">
-            <span>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowLeftIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowRightIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="success"
-                ><feather-icon icon="CheckIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="warning"
-                @click="handleAddClick()"
-                ><feather-icon icon="EditIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="danger"
-                ><feather-icon icon="TrashIcon"
-              /></b-button>
-            </span>
-          </div>
-          <div class="mt-1 font-weight-bold">นายอานนท์ รักจักร์</div>
-          <div>ตำแหน่ง: นักวิจัย</div>
-          <div>ระดับ: ชำนาญการ</div>
-        </div>
-        <div class="col-md-3 mt-1 mb-2">
-          <b-img :src="image10" class="rounded" />
-          <div v-if="isAdmin" class="mt-2">
-            <span>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowLeftIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowRightIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="success"
-                ><feather-icon icon="CheckIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="warning"
-                @click="handleAddClick()"
-                ><feather-icon icon="EditIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="danger"
-                ><feather-icon icon="TrashIcon"
-              /></b-button>
-            </span>
-          </div>
-          <div class="mt-1 font-weight-bold">นายอานนท์ รักจักร์</div>
-          <div>ตำแหน่ง: นักวิจัย</div>
-          <div>ระดับ: ชำนาญการ</div>
-        </div>
-        <div class="col-md-3 mt-1 mb-2">
-          <b-img :src="image11" class="rounded" />
-          <div v-if="isAdmin" class="mt-2">
-            <span>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowLeftIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowRightIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="success"
-                ><feather-icon icon="CheckIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="warning"
-                @click="handleAddClick()"
-                ><feather-icon icon="EditIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="danger"
-                ><feather-icon icon="TrashIcon"
-              /></b-button>
-            </span>
-          </div>
-          <div class="mt-1 font-weight-bold">นายอานนท์ รักจักร์</div>
-          <div>ตำแหน่ง: นักวิจัย</div>
-          <div>ระดับ: ชำนาญการ</div>
-        </div>
-        <div class="col-md-3 mt-1 mb-2">
-          <b-img :src="image12" class="rounded" />
-          <div v-if="isAdmin" class="mt-2">
-            <span>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowLeftIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="info"
-                ><feather-icon icon="ArrowRightIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="success"
-                ><feather-icon icon="CheckIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="warning"
-                @click="handleAddClick()"
-                ><feather-icon icon="EditIcon"
-              /></b-button>
-              <b-button
-                v-if="isAdmin"
-                class="btn btn-sm rounded-circle btn-action-custom"
-                variant="danger"
-                ><feather-icon icon="TrashIcon"
-              /></b-button>
-            </span>
-          </div>
-          <div class="mt-1 font-weight-bold">นายอานนท์ รักจักร์</div>
-          <div>ตำแหน่ง: นักวิจัย</div>
-          <div>ระดับ: ชำนาญการ</div>
         </div>
       </div>
     </div>

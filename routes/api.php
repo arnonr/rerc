@@ -11,6 +11,10 @@ use App\Http\Controllers\HostController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\SlideController;
 use App\Http\Controllers\LabRoomController;
+use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\MemberController;
+use App\Http\Controllers\PortfolioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,6 +65,41 @@ Route::group(['prefix' => 'lab-room'], function () {
     Route::post('/', [LabRoomController::class, 'add']);
     Route::put('/{id}', [LabRoomController::class, 'edit']);
     Route::delete('/{id}', [LabRoomController::class, 'delete']);
+});
+
+Route::group(['prefix' => 'equipment'], function () {
+    Route::put('/level/{id}', [EquipmentController::class, 'editLevel']);
+    Route::get('/{id}', [EquipmentController::class, 'get']);
+    Route::get('/',     [EquipmentController::class, 'getAll']);
+    Route::post('/', [EquipmentController::class, 'add']);
+    Route::put('/{id}', [EquipmentController::class, 'edit']);
+    Route::delete('/{id}', [EquipmentController::class, 'delete']);
+});
+
+Route::group(['prefix' => 'organization'], function () {
+    Route::get('/{id}', [OrganizationController::class, 'get']);
+    Route::get('/',     [OrganizationController::class, 'getAll']);
+    Route::post('/', [OrganizationController::class, 'add']);
+    Route::put('/{id}', [OrganizationController::class, 'edit']);
+    Route::delete('/{id}', [OrganizationController::class, 'delete']);
+});
+
+Route::group(['prefix' => 'member'], function () {
+    Route::put('/level/{id}', [MemberController::class, 'editLevel']);
+    Route::get('/{id}', [MemberController::class, 'get']);
+    Route::get('/',     [MemberController::class, 'getAll']);
+    Route::post('/', [MemberController::class, 'add']);
+    Route::put('/{id}', [MemberController::class, 'edit']);
+    Route::delete('/{id}', [MemberController::class, 'delete']);
+});
+
+Route::group(['prefix' => 'portfolio'], function () {
+    Route::put('/level/{id}', [PortfolioController::class, 'editLevel']);
+    Route::get('/{id}', [PortfolioController::class, 'get']);
+    Route::get('/',     [PortfolioController::class, 'getAll']);
+    Route::post('/', [PortfolioController::class, 'add']);
+    Route::put('/{id}', [PortfolioController::class, 'edit']);
+    Route::delete('/{id}', [PortfolioController::class, 'delete']);
 });
 
 

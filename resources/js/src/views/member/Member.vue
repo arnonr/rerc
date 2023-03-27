@@ -33,9 +33,13 @@ import "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
 dayjs.extend(buddhistEra);
 
-import { ref, watchEffect, onUnmounted } from "@vue/composition-api";
+import {
+  ref,
+  watchEffect,
+  onUnmounted,
+} from "@vue/composition-api";
 import store from "@/store";
-import portfolioStoreModule from "./portfolioStoreModule";
+import memberStoreModule from "../pages/memberStoreModule";
 
 import { useToast } from "vue-toastification/composition";
 import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
@@ -90,14 +94,11 @@ export default {
     };
   },
   setup() {
-    const PORTFOLIO_APP_STORE_MODULE_NAME = "portfolio-list";
+    const MEMBER_APP_STORE_MODULE_NAME = "member-list";
 
     // Register module
-    if (!store.hasModule(PORTFOLIO_APP_STORE_MODULE_NAME))
-      store.registerModule(
-        PORTFOLIO_APP_STORE_MODULE_NAME,
-        portfolioStoreModule
-      );
+    if (!store.hasModule(MEMBER_APP_STORE_MODULE_NAME))
+      store.registerModule(MEMBER_APP_STORE_MODULE_NAME, memberStoreModule);
 
     onUnmounted(() => {});
 
@@ -114,13 +115,17 @@ export default {
       });
     };
 
+    // 
     const items = ref([]);
     const item = ref({
       id: null,
+      prefix: "",
       name: "",
-      portfolio_file: null,
-      portfolio_file_old: null,
-      detail: null,
+      surname: "",
+      member_file: null,
+      member_file_old: null,
+      position: "",
+      degree: "",
       level: null,
       is_publish: 1,
     });
@@ -162,7 +167,7 @@ export default {
     const fetchItems = () => {
       isOverLay.value = true;
       store
-        .dispatch("portfolio-list/fetchPortfolios", {
+        .dispatch("member-list/fetchMembers", {
           perPage: perPage.value.code,
           currentPage: currentPage.value == 0 ? undefined : currentPage.value,
           orderBy: orderBy.value.code,
@@ -179,7 +184,7 @@ export default {
           toast({
             component: ToastificationContent,
             props: {
-              title: "Error fetching Portfolio's list",
+              title: "Error fetching Member's list",
               icon: "AlertTriangleIcon",
               variant: "danger",
             },
@@ -193,11 +198,19 @@ export default {
       fetchItems();
     });
 
+    // const onChangePage = (page) => {
+    //   currentPage.value = page;
+    // };
+
+    // const displayDateInput = (date) => {
+    //   return date ? dayjs(date).locale("th").format("DD/MM/BBBB") : date;
+    // };
+
     const handleAddClick = () => {
       item.value.id = null;
       item.value.name = "";
-      item.value.portfolio_file = null;
-      item.value.lportfolio_file_old = null;
+      item.value.lab_room_file = null;
+      item.value.lab_room_file_old = null;
       item.value.detail = null;
       item.value.level = null;
       item.value.is_publish = 1;
@@ -208,8 +221,8 @@ export default {
     const handleEditClick = (it) => {
       item.value.id = it.id;
       item.value.name = it.name;
-      item.value.portfolio_file = null;
-      item.value.portfolio_file_old = it.portfolio_file;
+      item.value.lab_room_file = null;
+      item.value.lab_room_file_old = it.lab_room_file;
       item.value.detail = it.detail;
       item.value.level = it.level;
       item.value.is_publish = it.is_publish;
@@ -233,7 +246,7 @@ export default {
 
       let dataSend = {
         name: item.value.name,
-        portfolio_file: item.value.portfolio_file,
+        lab_room_file: item.value.lab_room_file,
         detail: item.value.detail,
         level: item.value.level,
         is_publish: item.value.is_publish,
@@ -241,7 +254,7 @@ export default {
 
       if (item.value.id == null) {
         store
-          .dispatch("portfolio-list/addPortfolio", dataSend)
+          .dispatch("lab-room-list/addLabRoom", dataSend)
           .then(async (response) => {
             if (response.data.message == "success") {
               fetchItems();
@@ -253,7 +266,7 @@ export default {
               toast({
                 component: ToastificationContent,
                 props: {
-                  title: "Success : Added Portfolio",
+                  title: "Success : Added Lab Room",
                   icon: "CheckIcon",
                   variant: "success",
                 },
@@ -275,7 +288,7 @@ export default {
         dataSend["id"] = item.value.id;
 
         store
-          .dispatch("portfolio-list/editPortfolio", dataSend)
+          .dispatch("lab-room-list/editLabRoom", dataSend)
           .then(async (response) => {
             if (response.data.message == "success") {
               fetchItems();
@@ -287,7 +300,7 @@ export default {
               toast({
                 component: ToastificationContent,
                 props: {
-                  title: "Success : Updated Portfolio",
+                  title: "Success : Updated Lab Room",
                   icon: "CheckIcon",
                   variant: "success",
                 },
@@ -302,7 +315,7 @@ export default {
           .catch(() => {
             isSubmit.value = false;
             isOverLay.value = false;
-            errorToast("Update Portfolio Error");
+            errorToast("Update Lab Room Error");
           });
       }
     };
@@ -338,7 +351,7 @@ export default {
 
     const onDelete = (id) => {
       store
-        .dispatch("portfolio-list/deletePortfolio", { id: id })
+        .dispatch("lab-room-list/deleteLabRoom", { id: id })
         .then((response) => {
           if (response.data.message == "success") {
             fetchItems();
@@ -358,7 +371,7 @@ export default {
     const handleTogglePublishClick = (id, is_publish) => {
       is_publish = is_publish == 1 ? 0 : 1;
       store
-        .dispatch("portfolio-list/editPortfolio", {
+        .dispatch("lab-room-list/editLabRoom", {
           id: id,
           is_publish: is_publish,
         })
@@ -380,7 +393,7 @@ export default {
 
     const handleLevelClick = (id, type) => {
       store
-        .dispatch("portfolio-list/editLevelPortfolio", {
+        .dispatch("lab-room-list/editLevelLabRoom", {
           id: id,
           type: type,
         })
@@ -390,7 +403,7 @@ export default {
             toast({
               component: ToastificationContent,
               props: {
-                title: "Success : Updated Portfolio",
+                title: "Success : Updated Lab Room",
                 icon: "CheckIcon",
                 variant: "success",
               },
@@ -408,7 +421,6 @@ export default {
         });
     };
 
-    // const image = "http://localhost:8111/storage/organization/chart2.jpg";
     return {
       isAdmin,
       isModal,
@@ -423,7 +435,7 @@ export default {
       items,
       onConfirmDelete,
       item,
-      simpleRules,
+      simpleRules
     };
   },
 };
@@ -470,7 +482,7 @@ export default {
       cancel-title="Close"
       centered
       size="lg"
-      title="Add Portfolio"
+      title="Add Lab Room"
       :visible="isModal"
       @ok="validationForm"
       :ok-disabled="isSubmit"
@@ -486,27 +498,24 @@ export default {
           <b-form>
             <div class="row">
               <b-form-group
-                label="Portfolio Photo"
-                label-for="portfolio_file"
+                label="Lab Photo"
+                label-for="lab_room_file"
                 class="col-md"
               >
-                <validation-provider
-                  name="portfolio_file"
-                  #default="{ errors }"
-                >
+                <validation-provider name="lab_room_file" #default="{ errors }">
                   <b-input-group>
                     <b-input-group-prepend>
                       <b-button
                         variant="outline-warning"
                         target="_blank"
-                        :href="item.portfolio_file_old"
+                        :href="item.lab_room_file_old"
                       >
                         <feather-icon icon="FileTextIcon" /> ดูไฟล์เดิม
                       </b-button>
                     </b-input-group-prepend>
                     <b-form-file
-                      id="portfolio_file"
-                      v-model="item.portfolio_file"
+                      id="lab_room_file"
+                      v-model="item.lab_room_file"
                       placeholder="Choose a new file or drop it here..."
                       drop-placeholder="Drop file here..."
                     />
@@ -516,11 +525,7 @@ export default {
               </b-form-group>
             </div>
             <div class="row">
-              <b-form-group
-                label="Portfolio Name"
-                label-for="name"
-                class="col-md"
-              >
+              <b-form-group label="Lab Name" label-for="name" class="col-md">
                 <validation-provider
                   #default="{ errors }"
                   name="name"
@@ -539,7 +544,7 @@ export default {
             </div>
             <div class="row">
               <b-form-group
-                label="Description"
+                label="Lab Description"
                 label-for="description"
                 class="col-md"
               >
@@ -560,9 +565,8 @@ export default {
       </b-overlay>
     </b-modal>
 
-    <!-- Search -->
     <div class="mb-2 div-org">
-      <h2 class="text-center">Portfolio</h2>
+      <h2 class="text-center">Lab Room</h2>
 
       <hr class="hr-custom" />
 
@@ -575,79 +579,78 @@ export default {
             class="float-right"
           >
             <feather-icon icon="PlusIcon" />
-            Add Portfolio
+            <span class="d-none d-md-inline d-lg-inline">ADD LAB ROOM</span>
           </b-button>
         </div>
       </div>
 
-      <div class="row" v-for="it in items">
-        
-        <div
-          :class="
-            it.is_publish == 1
-              ? 'col-md-4 mt-1 mb-2'
-              : 'col-md-4 mt-1 mb-2 bg-gradient-secondary'
-          "
-          v-if="it.is_publish == 1 || isAdmin"
-        >
-          <b-img
-            :src="it.portfolio_file"
-            class="rounded img-fluid"
-            style="width: 400px"
-          />
-          <span style="position: absolute; top: 8px; right: 2em" v-if="isAdmin">
-            <b-button
-              class="btn btn-sm rounded-circle btn-action-custom"
-              variant="info"
-              @click="handleLevelClick(it.id, 'DC')"
-              ><feather-icon icon="ArrowLeftIcon"
-            /></b-button>
-            <b-button
-              class="btn btn-sm rounded-circle btn-action-custom"
-              variant="info"
-              @click="handleLevelClick(it.id, 'IC')"
-              ><feather-icon icon="ArrowRightIcon"
-            /></b-button>
-            <b-button
-              class="btn btn-sm rounded-circle btn-action-custom"
-              variant="success"
-              @click="handleTogglePublishClick(it.id, it.is_publish)"
-              ><feather-icon icon="CheckIcon"
-            /></b-button>
-            <b-button
-              class="btn btn-sm rounded-circle btn-action-custom"
-              variant="warning"
-              @click="handleEditClick(it)"
-              ><feather-icon icon="EditIcon"
-            /></b-button>
-            <b-button
-              class="btn btn-sm rounded-circle btn-action-custom"
-              variant="danger"
-              @click="onConfirmDelete(it.id)"
-              ><feather-icon icon="TrashIcon"
-            /></b-button>
-          </span>
-        </div>
+      <div class="row">
+        <div class="col-xl-6 mt-1 mb-2" v-for="it in items">
+          <div
+            :class="it.is_publish == 1 ? 'row' : 'row bg-gradient-secondary'"
+            v-if="it.is_publish == 1 || isAdmin"
+          >
+            <div class="col-xl-6 col-md-4">
+              <b-img :src="it.lab_room_file" class="rounded img-fluid" />
+              <span
+                style="position: absolute; top: 8px; right: 18px"
+                v-if="isAdmin"
+              >
+                <b-button
+                  class="btn btn-sm rounded-circle btn-action-custom"
+                  variant="info"
+                  @click="handleLevelClick(it.id, 'DC')"
+                  ><feather-icon icon="ArrowLeftIcon"
+                /></b-button>
+                <b-button
+                  class="btn btn-sm rounded-circle btn-action-custom"
+                  variant="info"
+                  @click="handleLevelClick(it.id, 'IC')"
+                  ><feather-icon icon="ArrowRightIcon"
+                /></b-button>
+                <b-button
+                  class="btn btn-sm rounded-circle btn-action-custom"
+                  variant="success"
+                  @click="handleTogglePublishClick(it.id, it.is_publish)"
+                  ><feather-icon icon="CheckIcon"
+                /></b-button>
+                <b-button
+                  class="btn btn-sm rounded-circle btn-action-custom"
+                  variant="warning"
+                  @click="handleEditClick(it)"
+                  ><feather-icon icon="EditIcon"
+                /></b-button>
+                <b-button
+                  class="btn btn-sm rounded-circle btn-action-custom"
+                  variant="danger"
+                  @click="onConfirmDelete(it.id)"
+                  ><feather-icon icon="TrashIcon"
+                /></b-button>
+              </span>
+            </div>
+            <!--  -->
+            <div class="col-xl-6 col-md-8">
+              <h3>{{ it.name }}</h3>
+              <div class="text-justify">
+                {{ it.detail }}
+              </div>
 
-        <div
-          :class="
-            it.is_publish == 1
-              ? 'col-md-8 mt-1 mb-2'
-              : 'col-md-4 mt-1 mb-2 bg-gradient-secondary'
-          "
-          v-if="it.is_publish == 1 || isAdmin"
-        >
-          <h3 class="mt-1 font-weight-bold">{{ it.name }}</h3>
-          <div class="mt-1 text-justify">
-            {{ it.detail }}
+              <button
+                class="btn btn-outline-primary mt-2"
+                style="vertical-align: bottom"
+                @click="
+                  $router.push({
+                    name: 'lab-room-view',
+                    params: { id: it.id },
+                  })
+                "
+              >
+                More Detail
+              </button>
+            </div>
           </div>
         </div>
-
-        <div class="col-md-12">
-          <hr />
-        </div>
       </div>
-      <!--  -->
     </div>
   </div>
 </template>

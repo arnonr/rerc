@@ -76,16 +76,97 @@ export default {
     },
 
     editLevelLabRoom(ctx, dataSend) {
-        return new Promise((resolve, reject) => {
-          axios
-            .put(`/lab-room/level/${dataSend.id}`, dataSend)
-            .then((response) => {
-              return resolve(response);
-            })
-            .catch((error) => reject(error));
-        });
-      },
+      return new Promise((resolve, reject) => {
+        axios
+          .put(`/lab-room/level/${dataSend.id}`, dataSend)
+          .then((response) => {
+            return resolve(response);
+          })
+          .catch((error) => reject(error));
+      });
+    },
 
-    
+    //
+    fetchEquipments(ctx, queryParams) {
+      return new Promise((resolve, reject) => {
+        axios
+          .get("/equipment", { params: queryParams })
+          .then((response) => resolve(response))
+          .catch((error) => reject(error));
+      });
+    },
+    fetchEquipment(ctx, { id }) {
+      return new Promise((resolve, reject) => {
+        axios
+          .get(`/equipment/${id}`)
+          .then((response) => resolve(response))
+          .catch((error) => reject(error));
+      });
+    },
+    addEquipment(ctx, dataSend) {
+      var form_data = new FormData();
+
+      for (var key in dataSend) {
+        form_data.append(key, dataSend[key]);
+      }
+
+      return new Promise((resolve, reject) => {
+        axios
+          .post("/equipment", form_data, {
+            headers: {
+              "content-type": "multipart/form-data",
+            },
+          })
+          .then((response) => {
+            return resolve(response);
+          })
+          .catch((error) => reject(error));
+      });
+    },
+
+    editEquipment(ctx, dataSend) {
+      var form_data = new FormData();
+
+      for (var key in dataSend) {
+        form_data.append(key, dataSend[key]);
+      }
+
+      form_data.append("_method", "PUT");
+
+      return new Promise((resolve, reject) => {
+        axios
+          .post(`/equipment/${dataSend.id}`, form_data, {
+            headers: {
+              "content-type": "multipart/form-data",
+            },
+          })
+          .then((response) => {
+            return resolve(response);
+          })
+          .catch((error) => reject(error));
+      });
+    },
+
+    deleteEquipment(ctx, { id }) {
+      return new Promise((resolve, reject) => {
+        axios
+          .delete(`/equipment/${id}`)
+          .then((response) => {
+            return resolve(response);
+          })
+          .catch((error) => reject(error));
+      });
+    },
+
+    editLevelEquipment(ctx, dataSend) {
+      return new Promise((resolve, reject) => {
+        axios
+          .put(`/equipment/level/${dataSend.id}`, dataSend)
+          .then((response) => {
+            return resolve(response);
+          })
+          .catch((error) => reject(error));
+      });
+    },
   },
 };

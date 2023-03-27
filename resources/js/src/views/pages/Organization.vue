@@ -3,7 +3,6 @@ import {
   BCard,
   BRow,
   BCol,
-  BFormInput,
   BButton,
   BLink,
   BDropdown,
@@ -11,17 +10,20 @@ import {
   BPagination,
   BSpinner,
   BOverlay,
-  BFormGroup,
   BCardText,
+  BImg,
   BModal,
-  BFormFile,
   BForm,
+  BFormGroup,
+  BFormFile,
+  BFormInput,
+  BInputGroup,
+  BInputGroupPrepend,
 } from "bootstrap-vue";
 import vSelect from "vue-select";
 import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import { Thai } from "flatpickr/dist/l10n/th.js";
-
 import { ValidationProvider, ValidationObserver } from "vee-validate";
 
 import dayjs from "dayjs";
@@ -29,19 +31,15 @@ import "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
 dayjs.extend(buddhistEra);
 
-import {
-  ref,
-  watch,
-  watchEffect,
-  reactive,
-  onUnmounted,
-} from "@vue/composition-api";
+import { ref, watchEffect, onUnmounted } from "@vue/composition-api";
 import store from "@/store";
-// import mouStoreModule from "./mouStoreModule";
+import organizationStoreModule from "./OrganizationStoreModule";
 
 import { useToast } from "vue-toastification/composition";
 import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
+import Swal from "sweetalert2";
 import { getUserData } from "@/auth/utils";
+import router from "../../router";
 
 export default {
   filters: {
@@ -53,7 +51,6 @@ export default {
     BCard,
     BRow,
     BCol,
-    BFormInput,
     BButton,
     BLink,
     BDropdown,
@@ -62,16 +59,21 @@ export default {
     BSpinner,
     BOverlay,
     vSelect,
-    BFormGroup,
     flatPickr,
     BPagination,
     BCardText,
     dayjs,
-    BModal,
+    BImg,
     ValidationProvider,
     ValidationObserver,
-    BFormFile,
+
+    BFormGroup,
+    BFormInput,
     BForm,
+    BFormFile,
+    BInputGroup,
+    BInputGroupPrepend,
+    BModal,
   },
   data() {
     return {
@@ -87,6 +89,14 @@ export default {
     };
   },
   setup() {
+    const ORGANIZATION_VIEW_APP_STORE_MODULE_NAME = "organization";
+
+    if (!store.hasModule(ORGANIZATION_VIEW_APP_STORE_MODULE_NAME))
+      store.registerModule(
+        ORGANIZATION_VIEW_APP_STORE_MODULE_NAME,
+        organizationStoreModule
+      );
+
     onUnmounted(() => {});
 
     const toast = useToast();
@@ -102,9 +112,25 @@ export default {
       });
     };
 
+    const item = ref({
+      id: null,
+      organization_file: null,
+      organization_file_old: null,
+      is_publish: 1,
+    });
+
+    const data = ref({
+      id: null,
+      organization_file: null,
+      organization_file_old: null,
+      is_publish: 1,
+    });
+
     const isAdmin = ref(true);
     const isModal = ref(false);
     const isSubmit = ref(false);
+    const isOverLay = ref(false);
+    const simpleRules = ref();
 
     let baseUrl = "http://143.198.208.110:8111";
     if (
@@ -114,16 +140,36 @@ export default {
       baseUrl = "http://localhost:8111";
     }
 
-    const image = baseUrl + "/storage/organization/chart1.jpg";
-
-    // const image = "http://localhost:8111/storage/organization/chart2.jpg";
+    const fetchItem = () => {
+      isOverLay.value = true;
+      store
+        .dispatch("organization/fetchOrganization", {
+          id: 1,
+        })
+        .then((response) => {
+          data.value = response.data.data;
+          isOverLay.value = false;
+        })
+        .catch((error) => {
+          console.log(error);
+          toast({
+            component: ToastificationContent,
+            props: {
+              title: "Error fetching Organization list",
+              icon: "AlertTriangleIcon",
+              variant: "danger",
+            },
+          });
+          isOverLay.value = false;
+        });
+    };
+    fetchItem();
 
     const handleEditClick = () => {
-      // item.value = {
-      //   username: "",
-      //   email: "",
-      //   type: "",
-      // };
+      item.value.id = data.value.id;
+      item.value.organization_file = null;
+      item.value.organization_file_old = data.value.organization_file;
+      item.value.is_publish = data.value.is_publish;
       isModal.value = true;
     };
 
@@ -131,20 +177,62 @@ export default {
       bvModalEvent.preventDefault();
       simpleRules.value.validate().then((success) => {
         if (success) {
-          // onSubmit();
-          isModal.value = false;
-          isSubmit.value = false;
+          onSubmit();
         }
       });
     };
 
+    const onSubmit = () => {
+      isOverLay.value = true;
+      isSubmit.value = true;
+
+      let dataSend = {
+        id: item.value.id,
+        organization_file: item.value.organization_file,
+        is_publish: item.value.is_publish,
+      };
+
+      store
+        .dispatch("organization/editOrganization", dataSend)
+        .then(async (response) => {
+          if (response.data.message == "success") {
+            fetchItem();
+
+            isSubmit.value = false;
+            isModal.value = false;
+            isOverLay.value = false;
+
+            toast({
+              component: ToastificationContent,
+              props: {
+                title: "Success : Updated Organization",
+                icon: "CheckIcon",
+                variant: "success",
+              },
+            });
+          } else {
+            isSubmit.value = false;
+            isModal.value = false;
+            isOverLay.value = false;
+            errorToast(response.data.message);
+          }
+        })
+        .catch(() => {
+          isSubmit.value = false;
+          isOverLay.value = false;
+          errorToast("Update Organization Error");
+        });
+    };
+
     return {
-      image,
       isAdmin,
       isModal,
       isSubmit,
       handleEditClick,
       validationForm,
+      item,
+      simpleRules,
+      data,
     };
   },
 };
@@ -200,26 +288,35 @@ export default {
             <div class="row">
               <b-form-group
                 label="Photo"
-                label-for="org_file"
+                label-for="organization_file"
                 class="col-md"
               >
                 <validation-provider
-                  name="org_file"
+                  name="organization_file"
                   #default="{ errors }"
-                  rules="required"
                 >
-                  <b-form-file
-                    id="org_file"
-                    placeholder="Choose a file or drop it here..."
-                    drop-placeholder="Drop file here..."
-                  />
-                  <!-- v-model="item.org_file" -->
-
+                  <b-input-group>
+                    <b-input-group-prepend>
+                      <b-button
+                        variant="outline-warning"
+                        target="_blank"
+                        :href="item.organization_file_old"
+                      >
+                        <feather-icon icon="FileTextIcon" /> ดูไฟล์เดิม
+                      </b-button>
+                    </b-input-group-prepend>
+                    <b-form-file
+                      id="organization_file"
+                      v-model="item.organization_file"
+                      placeholder="Choose a new file or drop it here..."
+                      drop-placeholder="Drop file here..."
+                    />
+                  </b-input-group>
                   <small class="text-danger">{{ errors[0] }}</small>
                 </validation-provider>
               </b-form-group>
+              <!--  -->
             </div>
-           
           </b-form>
         </validation-observer>
       </b-overlay>
@@ -241,7 +338,7 @@ export default {
 
       <hr class="hr-custom" />
 
-      <img :src="image" style="width: 100%" />
+      <img :src="data.organization_file" style="width: 100%" />
     </div>
   </div>
 </template>
