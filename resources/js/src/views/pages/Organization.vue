@@ -33,7 +33,7 @@ dayjs.extend(buddhistEra);
 
 import { ref, watchEffect, onUnmounted } from "@vue/composition-api";
 import store from "@/store";
-import organizationStoreModule from "./OrganizationStoreModule";
+import organizationStoreModule from "./organizationStoreModule";
 
 import { useToast } from "vue-toastification/composition";
 import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
