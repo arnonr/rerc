@@ -25,6 +25,7 @@ class UserController extends Controller
                 'users.firstname as firstname',
                 'users.lastname as lastname',
                 'users.type as type',
+                'user.tel as tel',
                 'users.avatar as avatar',
                 'users.status as status',
                 'department.id as departmentID',
@@ -136,6 +137,7 @@ class UserController extends Controller
             'user.email as email',
             'user.type as type',
             'user.status as status',
+            'user.tel as tel',
         )
         ->where('user.deleted_at', null);
 
@@ -176,9 +178,14 @@ class UserController extends Controller
         ]);
 
         $data = new User;
-        $data->username = $request->username;
+        $data->username = $request->email;
+        $data->firstname = $request->firstname;
+        $data->lastname = $request->lastname;
         $data->email = $request->email;
         $data->type = $request->type;
+        $data->status = $request->status;
+        $data->tel = $request->tel;
+        $data->password = bcrypt($request->tel);
         $data->save();
 
         $responseData = [
@@ -199,8 +206,14 @@ class UserController extends Controller
 
         $data = User::where('id',$id)->first();
 
+        $data->username = $request->email;
+        $data->firstname = $request->firstname;
+        $data->lastname = $request->lastname;
         $data->email = $request->email;
         $data->type = $request->type;
+        $data->status = $request->status;
+        $data->tel = $request->tel;
+        $data->password = bcrypt($request->tel);
         $data->save();
 
         $responseData = [

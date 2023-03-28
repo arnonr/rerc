@@ -51,6 +51,7 @@ Route::group(['prefix' => 'user'], function () {
 });
 
 Route::group(['prefix' => 'slide'], function () {
+    Route::put('/level/{id}', [SlideController::class, 'editLevel']);
     Route::get('/{id}', [SlideController::class, 'get']);
     Route::get('/', [SlideController::class, 'getAll']);
     Route::post('/', [SlideController::class, 'add']);

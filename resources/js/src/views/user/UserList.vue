@@ -98,7 +98,7 @@ export default {
     const isSubmit = ref(false);
     const simpleRules = ref();
 
-    const perPage = ref({ title: "10", code: 10 });
+    const perPage = ref({ title: "50", code: 50 });
     const currentPage = ref(1);
     const totalPage = ref(1);
     const totalItems = ref(0);
@@ -115,14 +115,6 @@ export default {
         visible: false,
       },
       {
-        key: "username",
-        label: "username",
-        sortable: true,
-        visible: true,
-        class: "text-center",
-        tdClass: "mw-3-5",
-      },
-      {
         key: "firstname",
         label: "ชื่อ",
         sortable: true,
@@ -131,24 +123,23 @@ export default {
         tdClass: "mw-3-5",
       },
       {
-        key: "lastname",
-        label: "นามสกุล",
+        key: "username",
+        label: "username",
         sortable: true,
         visible: true,
         class: "text-center",
         tdClass: "mw-3-5",
       },
       {
-        key: "email",
-        label: "เมล",
+        key: "tel",
+        label: "โทรศัพท์",
         sortable: true,
         visible: true,
         class: "text-center",
-        tdClass: "mw-3-7",
       },
       {
         key: "type",
-        label: "ประเภท",
+        label: "ประเภทผู้ใช้งาน",
         sortable: true,
         visible: true,
         class: "text-center",
@@ -164,6 +155,24 @@ export default {
 
     const visibleFields = computed(() => fields.filter((f) => f.visible));
 
+    const advancedSearch = reactive({
+      fullname: "",
+      firstname: "",
+      lastname: "",
+      username: "",
+      project_type_id: null,
+      type: null,
+    });
+
+    const resetAdvancedSearch = () => {
+      advancedSearch.fullname = "";
+      advancedSearch.firstname = "";
+      advancedSearch.lastname = "";
+      advancedSearch.username = "";
+      advancedSearch.project_type_id = null;
+      advancedSearch.type = null;
+    };
+
     const item = ref({
       username: "",
       email: "",
@@ -172,15 +181,14 @@ export default {
 
     const selectOptions = ref({
       perPage: [
-        { title: "1", code: 1 },
-        { title: "2", code: 2 },
-        { title: "10", code: 10 },
         { title: "20", code: 20 },
         { title: "50", code: 50 },
       ],
       orderBy: [
         { title: "ชื่อ", code: "firstname" },
         { title: "username", code: "username" },
+        { title: "ประเภทตัดสิน", code: "project_type_name" },
+        { title: "ประเภทผู้ใช้", code: "type" },
       ],
       order: [
         { title: "ASC", code: "asc" },
@@ -190,21 +198,40 @@ export default {
         { title: "อนุมัติ", code: 2 },
         { title: "บล็อก", code: 3 },
       ],
-      type: [
+      types: [
         { title: "Admin", code: "admin" },
-        { title: "Staff", code: "staff" },
-        { title: "User", code: "user" },
+        // { title: "Staff", code: "staff" },
+        // { title: "Referee", code: "referee" },
+        // { title: "User", code: "user" },
       ],
+      project_types: [],
     });
+
+
 
     const fetchItems = () => {
       isOverLay.value = true;
+
+      let search = { ...advancedSearch };
+      if (search.project_type_id) {
+        if (search.project_type_id.hasOwnProperty("code")) {
+          search.project_type_id = search.project_type_id.code;
+        }
+      }
+
+      if (search.type) {
+        if (search.type.hasOwnProperty("code")) {
+          search.type = search.type.code;
+        }
+      }
+
       store
         .dispatch("user-list/fetchUsers", {
           perPage: perPage.value.code,
           currentPage: currentPage.value == 0 ? undefined : currentPage.value,
           orderBy: orderBy.value.code,
           order: order.value.code,
+          ...search,
         })
         .then((response) => {
           items.value = response.data.data;
@@ -295,9 +322,16 @@ export default {
     const handleEditClick = (data) => {
       item.value = data;
 
-      item.value.type = selectOptions.value.type.find((t) => {
+      item.value.type = selectOptions.value.types.find((t) => {
         return t.code == data.type;
       });
+
+      item.value.project_type_id = selectOptions.value.project_types.find(
+        (t) => {
+          return t.code == data.project_type_id;
+        }
+      );
+
       isAdd.value = false;
       isModal.value = true;
     };
@@ -306,7 +340,12 @@ export default {
       item.value = {
         username: "",
         email: "",
-        type: "",
+        firstname: "",
+        lastname: "",
+        tel: "",
+        project_type_id: null,
+        type: null,
+        // status: 1
       };
       isAdd.value = true;
       isModal.value = true;
@@ -328,13 +367,22 @@ export default {
       isSubmit.value = true;
 
       let dataSend = {
-        username: item.value.username,
-        email: item.value.email,
+        email: item.value.username,
+        firstname: item.value.firstname,
+        lastname: item.value.lastname,
         type: item.value.type.code,
+        status: 2,
+        tel: item.value.tel,
+        project_type_id: null,
+        project_type_arr: null,
       };
 
+      if (item.value.type.code == "referee") {
+        dataSend.project_type_id = item.value.project_type_id.code;
+        dataSend.project_type_arr = item.value.project_type_id.code;
+      }
+
       if (item.value.id == null) {
-        dataSend.email = item.value.username +"@kmutnb.ac.th",
         store
           .dispatch("user-list/addUser", dataSend)
           .then(async (response) => {
@@ -403,6 +451,8 @@ export default {
     };
 
     return {
+      advancedSearch,
+      resetAdvancedSearch,
       items,
       item,
       isOverLay,
@@ -493,6 +543,13 @@ export default {
                 :items="items"
                 :fields="visibleFields"
               >
+                <template #cell(firstname)="row">
+                  {{
+                    row.item.firstname +
+                    " " +
+                    row.item.lastname
+                  }}
+                </template>
                 <template #cell(action)="row">
                   <b-button
                     variant="outline-success"
@@ -558,7 +615,7 @@ export default {
               <b-form>
                 <div class="row">
                   <b-form-group
-                    label="ICITaccount"
+                    label="Username"
                     label-for="username"
                     class="col-md"
                   >
@@ -570,7 +627,6 @@ export default {
                       <b-form-input
                         id="username"
                         placeholder=""
-                        :disabled="!isAdd"
                         v-model="item.username"
                         :state="errors.length > 0 ? false : null"
                       />
@@ -578,24 +634,60 @@ export default {
                     </validation-provider>
                   </b-form-group>
                 </div>
-                <!--  -->
-                <!-- <div class="row">
-                  <b-form-group label="email" label-for="email" class="col-md">
-                    <validation-provider
-                      #default="{ errors }"
-                      name="email"
-                      rules="required"
-                    >
+
+                <div class="row">
+                  <b-form-group
+                    label="ชื่อ"
+                    label-for="firstname"
+                    class="col-md"
+                  >
+                    <validation-provider #default="{ errors }" name="firstname">
                       <b-form-input
-                        id="email"
+                        id="firstname"
                         placeholder=""
-                        v-model="item.email"
+                        v-model="item.firstname"
                         :state="errors.length > 0 ? false : null"
                       />
                       <small class="text-danger">{{ errors[0] }}</small>
                     </validation-provider>
                   </b-form-group>
-                </div> -->
+                </div>
+
+                <div class="row">
+                  <b-form-group
+                    label="นามสกุล"
+                    label-for="flastname"
+                    class="col-md"
+                  >
+                    <validation-provider #default="{ errors }" name="lastname">
+                      <b-form-input
+                        id="lastname"
+                        placeholder=""
+                        v-model="item.lastname"
+                        :state="errors.length > 0 ? false : null"
+                      />
+                      <small class="text-danger">{{ errors[0] }}</small>
+                    </validation-provider>
+                  </b-form-group>
+                </div>
+
+                <div class="row">
+                  <b-form-group label="โทรศัพท์" label-for="tel" class="col-md">
+                    <validation-provider
+                      #default="{ errors }"
+                      name="tel"
+                      rules="required"
+                    >
+                      <b-form-input
+                        id="tel"
+                        placeholder=""
+                        v-model="item.tel"
+                        :state="errors.length > 0 ? false : null"
+                      />
+                      <small class="text-danger">{{ errors[0] }}</small>
+                    </validation-provider>
+                  </b-form-group>
+                </div>
 
                 <div class="row">
                   <b-form-group
@@ -613,7 +705,7 @@ export default {
                         label="title"
                         v-model="item.type"
                         :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
-                        :options="selectOptions.type"
+                        :options="selectOptions.types"
                         placeholder=""
                         :clearable="false"
                       />
@@ -621,6 +713,7 @@ export default {
                     </validation-provider>
                   </b-form-group>
                 </div>
+
               </b-form>
             </validation-observer>
           </b-overlay>

@@ -75,6 +75,17 @@ export default {
       });
     },
 
+    editLevelSlide(ctx, dataSend) {
+      return new Promise((resolve, reject) => {
+        axios
+          .put(`/slide/level/${dataSend.id}`, dataSend)
+          .then((response) => {
+            return resolve(response);
+          })
+          .catch((error) => reject(error));
+      });
+    },
+
     fetchHosts(ctx, queryParams) {
       return new Promise((resolve, reject) => {
         axios
@@ -101,7 +112,7 @@ export default {
           .catch((error) => reject(error));
       });
     },
-    // 
+    //
     addActivity(ctx, dataSend) {
       var form_data = new FormData();
 

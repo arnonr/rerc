@@ -12,6 +12,7 @@ import {
   BOverlay,
   BCardText,
   BImg,
+  BModal,
   // Form
   BForm,
   BFormGroup,
@@ -66,6 +67,7 @@ export default {
     BCardText,
     dayjs,
     BImg,
+    BModal,
     //
     ValidationProvider,
     ValidationObserver,
@@ -127,7 +129,7 @@ export default {
     });
 
     const isAdmin = isUserLoggedIn() ? true : false;
-    
+
     const isModal = ref(false);
     const isSubmit = ref(false);
     const isOverLay = ref(false);
@@ -199,7 +201,7 @@ export default {
       item.value.id = null;
       item.value.name = "";
       item.value.portfolio_file = null;
-      item.value.lportfolio_file_old = null;
+      item.value.portfolio_file_old = null;
       item.value.detail = null;
       item.value.level = null;
       item.value.is_publish = 1;
@@ -583,7 +585,6 @@ export default {
       </div>
 
       <div class="row" v-for="it in items">
-        
         <div
           :class="
             it.is_publish == 1

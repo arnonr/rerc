@@ -160,6 +160,15 @@
 
     <b-dropdown-item
       link-class="d-flex align-items-center"
+      v-if="isUserID == 1"
+      :to="{ name: 'user-list' }"
+    >
+      <feather-icon size="16" icon="UsersIcon" class="mr-50" />
+      <span>User List</span>
+    </b-dropdown-item>
+
+    <b-dropdown-item
+      link-class="d-flex align-items-center"
       :to="{ name: 'login' }"
       v-if="!isUserLoggedIn()"
     >
@@ -203,6 +212,7 @@ import useJwt from "@/auth/jwt/useJwt";
 import { avatarText } from "@core/utils/filter";
 
 import { isUserLoggedIn } from "@/auth/utils";
+import { getUserData } from "@/auth/utils";
 
 export default {
   components: {
@@ -248,8 +258,11 @@ export default {
     },
   },
   setup() {
+    const isUserID = isUserLoggedIn() ? getUserData().userID : null;
+  
     return {
       isUserLoggedIn,
+      isUserID
     };
   },
 };

@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Slide;
 use Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 const whitelist = ['127.0.0.1', "::1","localhost:8111"];
 
@@ -46,13 +48,6 @@ class SlideController extends Controller
         if ($request->is_publish) {
             $items->where('is_publish',$request->is_publish);
         }
-
-        // $order_by = $request->order_by ? $request->order_by : 'id';
-        // $order = $request->order ? $request->order : 'asc';
-
-        // $data = $data->orderBy($order_by, $order);
-            
-        // $data = $data->get();
 
         if($request->orderBy){
             $items = $items->orderBy($request->orderBy, $request->order);
@@ -123,8 +118,9 @@ class SlideController extends Controller
         }
 
         $level = 1;
-        if($request->level == null){
-            $check_level = Slide::max('level')->first();
+        $level = 1;
+        if(($request->level == null) || ($request->level == 'null')){
+            $check_level = Slide::max('level');
             if($check_level){
                 $level = $check_level + 1;
             }
@@ -164,18 +160,9 @@ class SlideController extends Controller
             $pathSlide  = $item->slide_file;
         }
 
-        $level = 1;
-        if($request->level == null){
-            $check_level = Slide::max('level')->first();
-            if($check_level){
-                $level = $check_level + 1;
-            }
-        }
-
         $item->slide_file = $pathSlide;
-        $item->link_url = $request->link_url;
-        // $item->level = $level;
-        $item->is_publish = $request->is_publish;
+        $item->link_url = isset($request->link_url) ? $request->link_url : $item->link_url;
+        $item->is_publish = isset($request->is_publish) ? $request->is_publish : $item->is_publish;
         $item->updated_by = 'arnonr';
         $item->save();
 
@@ -191,13 +178,65 @@ class SlideController extends Controller
     {
         $item = Slide::where('id', $id)->first();
 
+        $item->level = null;
+        $item->is_publish = 0;
         $item->deleted_at = Carbon::now();
         $item->save();
+
+        // เรียงลำดับใหม่
+        $items = Slide::where('deleted_at', null)->orderBy('level', 'asc')->get();
+
+        $i = 1; 
+        foreach($items as $it){
+            $it->level = $i;
+            $i++;
+            $it->save();
+        }
 
         $responseData = [
             'message' => 'success'
         ];
 
+        return response()->json($responseData, 200);
+    }
+
+    public function editLevel($id, Request $request)
+    {
+        $request->validate([
+            'id as required',
+            'type as required',
+        ]);
+
+        $id = $request->id;
+        $type = $request->type;
+
+        $item = Slide::where('id', $id)->first();
+
+        $item1 = null;
+        if($type == 'IC'){
+            $item1 = Slide::where('level', $item->level + 1)->first();
+        }
+
+        if($type == 'DC'){
+            $item1 = Slide::where('level', $item->level - 1)->first();
+        }
+
+        if($item1 != null){
+            $level = $item1->level;
+            $level1 = $item->level;
+
+            $item->level = $level;
+            $item->save();
+
+            $item1->level = $level1;
+            $item1->save();
+        }
+
+        $responseData = [
+            'message' => 'success',
+            // 'data' => $item,
+        ];
+        
         return response()->json($responseData, 200);
     }
 }
