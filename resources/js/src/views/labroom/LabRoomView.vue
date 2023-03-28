@@ -43,6 +43,9 @@ import { getUserData } from "@/auth/utils";
 import router from "../../router";
 import { isUserLoggedIn } from "@/auth/utils";
 
+import { Swiper, SwiperSlide } from "vue-awesome-swiper";
+import "swiper/css/swiper.css";
+
 export default {
   filters: {
     formatYear(year, buddhistYear) {
@@ -75,6 +78,8 @@ export default {
     BFormFile,
     BInputGroup,
     BInputGroupPrepend,
+    Swiper,
+    SwiperSlide,
   },
   data() {
     return {
@@ -87,10 +92,18 @@ export default {
         disableMobile: "true",
       },
       buddhistYear: true,
+      swiperOption: {
+        speed: 2500,
+        autoplay: {
+          delay: 5000,
+          pauseOnMouseEnter: true,
+        },
+        initialSlide: 1,
+        slidesPerView: "4",
+      },
     };
   },
   setup() {
-
     const LAB_ROOM_VIEW_APP_STORE_MODULE_NAME = "lab-room-view";
 
     // Register module
@@ -456,6 +469,13 @@ export default {
       vdoFile.value = it.equipment_vdo_file;
     };
 
+    const onSwiper = (swiper) => {
+      console.log(swiper);
+    };
+    const onSlideChange = () => {
+      console.log("slide change");
+    };
+
     return {
       isAdmin,
       isModal,
@@ -473,6 +493,8 @@ export default {
       isVdoShow,
       vdoFile,
       handleModalVDOClick,
+      onSwiper,
+      onSlideChange,
     };
   },
 };
@@ -671,69 +693,77 @@ export default {
           </b-button>
           <h3 class="mb-2">Equipment in Room</h3>
           <div class="row">
-            <div class="col-md-3" v-for="it in items">
-              <b-card
-                :class="
-                  it.is_publish == 1
-                    ? 'position-static'
-                    : 'position-static bg-gradient-secondary'
-                "
-                :img-src="it.equipment_file"
-                img-top
-                :img-alt="it.name"
-                :title="it.name"
-              >
-                <!--  -->
-                <span
-                  style="position: absolute; top: 8px; right: 18px"
-                  v-if="isAdmin"
-                >
-                  <b-button
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="info"
-                    @click="handleLevelClick(it.id, 'DC')"
-                    ><feather-icon icon="ArrowLeftIcon"
-                  /></b-button>
-                  <b-button
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="info"
-                    @click="handleLevelClick(it.id, 'IC')"
-                    ><feather-icon icon="ArrowRightIcon"
-                  /></b-button>
-                  <b-button
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="success"
-                    @click="handleTogglePublishClick(it.id, it.is_publish)"
-                    ><feather-icon icon="CheckIcon"
-                  /></b-button>
-                  <b-button
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="warning"
-                    @click="handleEditClick(it)"
-                    ><feather-icon icon="EditIcon"
-                  /></b-button>
-                  <b-button
-                    class="btn btn-sm rounded-circle btn-action-custom"
-                    variant="danger"
-                    @click="onConfirmDelete(it.id)"
-                    ><feather-icon icon="TrashIcon"
-                  /></b-button>
-                </span>
-                <!--  -->
-                <b-card-text>
-                  {{ it.detail }}
-                  <br />
-                  <b-button
-                    class="btn btn-outline-warning mt-2"
-                    v-b-modal.myModal
-                    variant="outline-warning"
-                    @click="handleModalVDOClick(it)"
-                  >
-                    <feather-icon icon="YoutubeIcon" size="12" />
-                    แนะนำการใช้เครื่องมือ
-                  </b-button>
-                </b-card-text>
-              </b-card>
+            <div class="example-3d col-md-12">
+              <swiper class="swiper" :options="swiperOption">
+                <swiper-slide v-for="it in items" :key="it.id">
+                  <div class="col-md-12">
+                    <b-card
+                      :class="
+                        it.is_publish == 1
+                          ? 'position-static'
+                          : 'position-static bg-gradient-secondary'
+                      "
+                      :img-src="it.equipment_file"
+                      img-top
+                      :img-alt="it.name"
+                      :title="it.name"
+                    >
+                      <!--  -->
+                      <span
+                        style="position: absolute; top: 8px; right: 18px"
+                        v-if="isAdmin"
+                      >
+                        <b-button
+                          class="btn btn-sm rounded-circle btn-action-custom"
+                          variant="info"
+                          @click="handleLevelClick(it.id, 'DC')"
+                          ><feather-icon icon="ArrowLeftIcon"
+                        /></b-button>
+                        <b-button
+                          class="btn btn-sm rounded-circle btn-action-custom"
+                          variant="info"
+                          @click="handleLevelClick(it.id, 'IC')"
+                          ><feather-icon icon="ArrowRightIcon"
+                        /></b-button>
+                        <b-button
+                          class="btn btn-sm rounded-circle btn-action-custom"
+                          variant="success"
+                          @click="
+                            handleTogglePublishClick(it.id, it.is_publish)
+                          "
+                          ><feather-icon icon="CheckIcon"
+                        /></b-button>
+                        <b-button
+                          class="btn btn-sm rounded-circle btn-action-custom"
+                          variant="warning"
+                          @click="handleEditClick(it)"
+                          ><feather-icon icon="EditIcon"
+                        /></b-button>
+                        <b-button
+                          class="btn btn-sm rounded-circle btn-action-custom"
+                          variant="danger"
+                          @click="onConfirmDelete(it.id)"
+                          ><feather-icon icon="TrashIcon"
+                        /></b-button>
+                      </span>
+                      <!--  -->
+                      <b-card-text>
+                        {{ it.detail }}
+                        <br />
+                        <b-button
+                          class="btn btn-outline-warning mt-2"
+                          v-b-modal.myModal
+                          variant="outline-warning"
+                          @click="handleModalVDOClick(it)"
+                        >
+                          <feather-icon icon="YoutubeIcon" size="12" />
+                          แนะนำการใช้เครื่องมือ
+                        </b-button>
+                      </b-card-text>
+                    </b-card>
+                  </div>
+                </swiper-slide>
+              </swiper>
             </div>
           </div>
         </div>
