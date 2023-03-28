@@ -34,4 +34,11 @@ export default [
     resource: "AdminUser",
     action: "manage",
   },
+  {
+    title: "จัดการผู้ใช้งาน/User",
+    route: "user-list",
+    icon: "UsersIcon",
+    resource: "AdminUser",
+    action: "manage",
+  },
 ];

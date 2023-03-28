@@ -45,6 +45,7 @@ import { useToast } from "vue-toastification/composition";
 import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
 import Swal from "sweetalert2";
 import { getUserData } from "@/auth/utils";
+import { isUserLoggedIn } from "@/auth/utils";
 
 export default {
   filters: {
@@ -126,7 +127,8 @@ export default {
       is_publish: 1,
     });
 
-    const isAdmin = ref(true);
+    const isAdmin = isUserLoggedIn() ? true : false;
+
     const isModal = ref(false);
     const isSubmit = ref(false);
     const isOverLay = ref(false);

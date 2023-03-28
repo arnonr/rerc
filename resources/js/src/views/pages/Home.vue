@@ -45,6 +45,7 @@ import { getUserData } from "@/auth/utils";
 
 import { Splide, SplideSlide } from "@cycraft/vue-splide";
 import "@splidejs/splide/dist/css/themes/splide-default.min.css";
+import { isUserLoggedIn } from "@/auth/utils";
 
 export default {
   filters: {
@@ -123,8 +124,8 @@ export default {
     const items = ref([]);
     const splide = ref();
     //
-    const isAdmin = ref(true);
-    // const isAdmin = getUserData().type == "admin" ? true : false;
+    // const isAdmin = ref(true);
+    const isAdmin = isUserLoggedIn() ? true : false;
     // const isStaff = getUserData().type == "staff" ? true : false;
     const isModal = ref(false);
     const isSubmit = ref(false);
@@ -533,12 +534,12 @@ div.inner {
           <Splide
             :options="slideOptions"
             aria-label="Vue Splide Example"
-            ref="splide"  
+            ref="splide"
           >
             <SplideSlide v-for="it in items" :key="it.id">
               <div class="inner">
-                  <img
-                    :src="it.slide_file"
+                <img
+                  :src="it.slide_file"
                   :alt="it.link_url"
                   :data-splide-lazy="it.slide_file"
                 />

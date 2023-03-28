@@ -41,6 +41,7 @@ import { useToast } from "vue-toastification/composition";
 import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
 import Swal from "sweetalert2";
 import { getUserData } from "@/auth/utils";
+import { isUserLoggedIn } from "@/auth/utils";
 
 export default {
   filters: {
@@ -125,7 +126,8 @@ export default {
       is_publish: 1,
     });
 
-    const isAdmin = ref(true);
+    const isAdmin = isUserLoggedIn() ? true : false;
+    
     const isModal = ref(false);
     const isSubmit = ref(false);
     const isOverLay = ref(false);
@@ -595,7 +597,7 @@ export default {
             class="rounded img-fluid"
             style="width: 400px"
           />
-          <span style="position: absolute; top: 8px; right: 2em" v-if="isAdmin">
+          <span style="position: absolute; top: 8px; left: 2em" v-if="isAdmin">
             <b-button
               class="btn btn-sm rounded-circle btn-action-custom"
               variant="info"

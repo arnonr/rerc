@@ -8,7 +8,7 @@
             fluid
             :src="logoImg"
             alt="Login V2"
-            style="width: 80%; margin-right: 10px"
+            style="width: 50%; margin-right: 10px"
           />
         </b-link>
 
@@ -23,7 +23,7 @@
         <validation-observer ref="loginForm" #default="{ invalid }">
           <b-form class="auth-login-form mt-2" @submit.prevent="login">
             <!-- email -->
-            <b-form-group label="ICITaccount" label-for="login-username">
+            <b-form-group label="Username" label-for="login-username">
               <validation-provider
                 #default="{ errors }"
                 name="username"
@@ -35,7 +35,7 @@
                   v-model="username"
                   :state="errors.length > 0 ? false : null"
                   name="login-username"
-                  placeholder="ICITaccount"
+                  placeholder="Username"
                   autofocus
                 />
                 <small class="text-danger">{{ errors[0] }}</small>
@@ -50,7 +50,7 @@
                   href="https://account.kmutnb.ac.th/web/recovery/index"
                   target="_blank"
                 >
-                  <small>Forgot Password?</small>
+                  <!-- <small>Forgot Password?</small> -->
                 </b-link>
               </div>
               <validation-provider
@@ -156,7 +156,7 @@ export default {
       password: "",
       username: "",
       sideImg: require("@/assets/images/pages/login-v2.svg"),
-      logoImg: require("@/assets/images/logo/logo-login.jpeg"),
+      logoImg: require("@/assets/images/logo/logo-rerc.jpg"),
       // validation rules
       required,
       email,
