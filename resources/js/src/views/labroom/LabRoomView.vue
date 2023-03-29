@@ -99,7 +99,21 @@ export default {
           pauseOnMouseEnter: true,
         },
         initialSlide: 1,
-        slidesPerView: "4",
+        // slidesPerView: "4",
+        breakpoints: {
+          320: {
+            //当屏幕宽度大于等于320
+            slidesPerView: 1,
+          },
+          768: {
+            //当屏幕宽度大于等于768
+            slidesPerView: 3,
+          },
+          1280: {
+            //当屏幕宽度大于等于1280
+            slidesPerView: 4,
+          },
+        },
       },
     };
   },
