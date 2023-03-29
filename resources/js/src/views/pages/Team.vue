@@ -678,7 +678,7 @@ export default {
               </span>
             </div>
             <div class="mt-1 font-weight-bold text-center">
-              {{ it.prefix + it.name + it.surname }}
+              {{ it.prefix + it.name +" "+ it.surname }}
             </div>
             <div>ตำแหน่ง: {{ it.position }}</div>
             <div>ระดับ: {{ it.degree }}</div>
